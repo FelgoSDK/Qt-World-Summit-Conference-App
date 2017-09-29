@@ -11,7 +11,7 @@ For more information about creating Apps with V-Play Engine, see here: http://v-
 
 Download and try the demo:
  - Android: https://play.google.com/store/apps/details?id=net.vplay.demos.qtws2017
- - iOS: https://itunes.apple.com/at/app/qt-world-summit-2016-qtws/id1286758361?l=en&mt=8
+ - iOS: https://itunes.apple.com/us/app/qt-world-summit-2017-official/id1286758361?l=en&mt=8
 
 Installation Instructions
 -------------------------
