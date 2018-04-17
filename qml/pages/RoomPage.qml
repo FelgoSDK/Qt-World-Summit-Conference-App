@@ -1,16 +1,19 @@
 import VPlayApps 1.0
-import QtQuick 2.0
+import QtQuick 2.7
 
 Page {
   id: roomPage
   title: room
   property string room
 
+  onPushed: amplitude.logEvent("Show Room",{"title" : title})
+
   AppFlickable {
     id: flick
     anchors.fill: parent
     contentWidth: roomPage.width
     contentHeight: roomPage.height
+    flickableDirection: Flickable.AutoFlickIfNeeded
 
     PinchArea {
       width: Math.max(flick.contentWidth, flick.width)
@@ -44,7 +47,8 @@ Page {
         AppImage {
           width: parent.width
           fillMode: AppImage.PreserveAspectFit
-          source: "../../assets/rooms/" + room.replace(" Room","") + ".png"
+          property string fileName: room !== "Agenda" ? room.replace(" Room","") + ".png" : "Agenda.jpg"
+          source: "../../assets/rooms/" + fileName
           MouseArea {
             anchors.fill: parent
             onDoubleClicked: {

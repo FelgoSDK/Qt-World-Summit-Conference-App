@@ -28,7 +28,7 @@ Page {
     visible: dataAvailable
   }
 
-  // prepareFavoritesModel - package favorites data in array ready to be displayed by TimeTableDaySchedule item
+  // prepareSearchModel - prepare model data for display
   function prepareSearchModel(events) {
     if(!events)
       return []

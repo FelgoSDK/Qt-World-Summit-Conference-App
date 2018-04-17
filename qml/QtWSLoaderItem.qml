@@ -13,19 +13,38 @@ Rectangle {
   // make navigation public (required for V-Play app demo launcher)
   property Navigation navigation: mainLoader.item && mainLoader.item.navigation
 
-  property GameNetworkViewItem gameNetworkViewItem: mainLoader.item && mainLoader.item.gameNetworkViewItem || null
-  property MultiplayerViewItem multiplayerViewItem: mainLoader.item && mainLoader.item.multiplayerViewItem || null
+   // if notification was opened, go to inbox after loading
+  property bool openInboxAfterLoading: false
+  onNavigationChanged: {
+    if(navigation && openInboxAfterLoading)
+      mainLoader.item.openInbox()
+  }
+
+  property SocialView socialViewItem: mainLoader.item && mainLoader.item.socialViewItem || null
+
+  // check for available app updates
+  Loader {
+    id: versionChecker
+    anchors.fill: parent
+    visible: false
+    asynchronous: true
+    property string updateCheckUrl: system.publishBuild ? "https://v-play.net/qml-sources/qtws2017/QtWSVersionCheck.qml" : "https://v-play.net/qml-sources/qtws2017/QtWSVersionCheck-test.qml"
+    source: !system.desktopPlatform ? updateCheckUrl : ""
+    onLoaded: versionChecker.visible = true // show result on successful load
+    z: 1
+  }
 
   // storage for caching data
   WebStorage {
     id: webStorage
     property var gameWindow: app
     gameNetworkItem: gameNetwork
-    clearAllAtStartup: system.desktopPlatform
+    clearAllAtStartup: gameNetwork.clearAllUserDataAtStartup // allows to simulate with a clean app, without favored talks and scanned contacts
 
     // initialize data model with stored data at startup
     Component.onCompleted: {
       DataModel.initialize(webStorage)
+      DataModel.increaseLocalAppStarts() // increase local app starts after first initialization
     }
 
     // update data model with fresh synchronized data
@@ -38,20 +57,34 @@ Rectangle {
   // facebook
   Facebook {
     id: facebook
-    appId: "<your-fb-appid>"
+    appId: AppSettings.facebookAppId
     readPermissions: [ "public_profile", "email", "user_friends" ]
+  }
+
+  // amplitude
+  Amplitude {
+    id: amplitude
+    // From Amplitude Settings
+    apiKey: AppSettings.amplitudeApiKey
+
+    onPluginLoaded: {
+      amplitude.logEvent("Start App", {"platform" : (system.isPlatform(System.IOS) ? "iOS" : "Android")})
+    }
   }
 
   // game network
   VPlayGameNetwork {
     id: gameNetwork
-    gameId: 406
-    secret: "qtws2017github"
-    gameNetworkView: gameNetworkViewItem && gameNetworkViewItem.gnView || null
+    gameId: AppSettings.gameId
+    secret: AppSettings.gameSecret
     facebookItem: facebook
     defaultUserName: "User %1"
+    defaultPerPageCount: 100 // increase to show more users in leaderboard, default would be 30
 
-    clearAllUserDataAtStartup: system.desktopPlatform // this can be enabled during development to simulate a first-time app start
+    // this saves the get_user_scores request at app startup if the user already logged in before. it can be synced manually in the profile view
+    // autoLoadUserScoresAndAchievemenstWhenAuthenticated: false // Note: activate this property after it is public with next V-Play Update
+
+    //clearAllUserDataAtStartup: system.desktopPlatform // this can be enabled during development to simulate a first-time app start
     clearOfflineSendingQueueAtStartup: true // clear any stored requests in the offline queue at app start, to avoid starting errors
     user.deviceId: system.UDID
 
@@ -89,15 +122,20 @@ Rectangle {
   VPlayMultiplayer {
     id: multiplayer
     gameNetworkItem: gameNetwork
-    multiplayerView: multiplayerViewItem && multiplayerViewItem.mpView || null
-    appKey: "<add your-appkey>"
-    pushKey: "<add your pushkey>"
+    appKey: AppSettings.appKey
+    pushKey: AppSettings.pushKey
     notificationBar: appNotificationBar // notification bar that also takes statusBarHeight into account
   }
 
   AppNotificationBar {
     id: appNotificationBar
     tintColor: Theme.tintColor
+    onDismiss: {
+      if(navigation)
+        mainLoader.item.openInbox()
+      else
+        loaderItem.openInboxAfterLoading = true
+    }
   }
 
   Component.onCompleted: {
@@ -107,17 +145,25 @@ Rectangle {
   // load main item dynamically
   Loader {
     id: mainLoader
-    asynchronous: true
+    // setting asynchronous to true causes issues at loading on Desktop. the item sometimes doesnt get fully loaded
+    asynchronous: !system.desktopPlatform
+    // the visible setting is irrelevant, as we move the item to the parent anyways
     visible: false
+    //visible: status === Loader.Ready // this would be the ideal setting if we would display the item within loader, and not move it to the parent
+    //onVisibleChanged: console.debug("mainLoader.visible changed to", visible)
+    //onStatusChanged: console.debug("mainLoader.status changed to", status, " 0=null, 1=ready, 2=loading, 3=error")
+    //source: Qt.resolvedUrl("QtWSMainItem.qml") // this would initially start loading, avoid this as we first wan to show the loading page
     onLoaded:{
-      mainLoader.item.parent = loaderItem
+      console.debug("xxx-QtWSLoaderItem: finished loading main qml file, showing it now")
+      // this is required. nothing is displayed without moving it to the parent
+      item.parent = loaderItem
       loadingFadeOut.start() // fade out loading screen (will reveal loaded item)
     }
   }
 
   Timer {
     id: loaderTimer
-    interval: 500
+    interval: 100 // start loading asap after the items were completed. was set to 500ms before, but rather start faster, the loading screen animation is shown anyhow
     onTriggered: mainLoader.source = Qt.resolvedUrl("QtWSMainItem.qml")
   }
 
@@ -126,28 +172,20 @@ Rectangle {
     id: loading
     anchors.fill: parent
     color: "#f0f1f2"
-    z: 1
+    z: 2
+
+    // Qt image
+    AppImage {
+      id: loadImage
+      fillMode: AppImage.PreserveAspectCrop
+      anchors.fill: parent
+      source: "../assets/loader.png"
+    }
 
     Column {
       anchors.centerIn: parent
-      spacing: dp(30)
-
-      // Qt image
-      AppImage {
-        id: loadImage
-        width: dp(92)
-        fillMode: AppImage.PreserveAspectFit
-        source: "../assets/Qt_logo.png"
-        anchors.horizontalCenter: parent.horizontalCenter
-      }
-
-      // Loading text
-      AppText {
-        text: "fetching conference data"
-        color: Theme.secondaryTextColor
-        font.pixelSize: sp(14)
-        anchors.horizontalCenter: parent.horizontalCenter
-      }
+      anchors.verticalCenterOffset: -dp(15)
+      spacing: dp(15)
 
       // Spinner
       Item {
@@ -160,14 +198,14 @@ Rectangle {
           width: dp(10)
           height: dp(10)
           radius: width/2
-          color: "#888"
+          color: Theme.tintColor
           anchors.horizontalCenter: parent.horizontalCenter
         }
         Rectangle {
           width: dp(10)
           height: dp(10)
           radius: width/2
-          color: "#888"
+          color: Theme.tintColor
           anchors.horizontalCenter: parent.horizontalCenter
           anchors.bottom: parent.bottom
         }
@@ -263,53 +301,4 @@ Rectangle {
     return [h, s, l];
   }
 
-  // scheduleNotificationsForFavorites
-  function scheduleNotificationsForFavorites() {
-    if(typeof notificationManager === 'undefined')
-      return
-
-    notificationManager.cancelAllNotifications()
-    if(!DataModel.notificationsEnabled || !DataModel.favorites || !DataModel.talks)
-      return
-
-    for(var idx in DataModel.favorites) {
-      var talkId = DataModel.favorites[idx]
-      scheduleNotificationForTalk(talkId)
-    }
-
-    // add notification before world summit starts!
-    var nowTime = new Date().getTime()
-    var eveningBeforeConferenceTime = new Date("2017-10-10T21:00.000"+DataModel.timeZone).getTime()
-    if(nowTime < eveningBeforeConferenceTime) {
-      var text = "V-Play wishes all the best for Qt World Summit 2016!"
-      var notification = {
-        notificationId: -1,
-        message: text,
-        timestamp: Math.round(eveningBeforeConferenceTime / 1000) // utc seconds
-      }
-      notificationManager.schedule(notification)
-    }
-  }
-
-  // scheduleNotificationForTalk
-  function scheduleNotificationForTalk(talkId) {
-    if(DataModel.loaded && DataModel.talks && DataModel.talks[talkId]) {
-      var talk = DataModel.talks[talkId]
-      var text = talk["title"]+" starts "+talk.start+" at "+talk["room"]+"."
-
-      var nowTime = new Date().getTime()
-      var utcDateStr = talk.day+"T"+talk.start+".000"+DataModel.timeZone
-      var notificationTime = new Date(utcDateStr).getTime()
-      notificationTime = notificationTime - 10 * 60 * 1000 // 10 minutes before
-
-      if(nowTime < notificationTime) {
-        var notification = {
-          notificationId: talkId,
-          message: text,
-          timestamp: Math.round(notificationTime / 1000) // utc seconds
-        }
-        notificationManager.schedule(notification)
-      }
-    }
-  }
 }

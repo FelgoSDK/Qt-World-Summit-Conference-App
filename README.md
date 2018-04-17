@@ -44,3 +44,16 @@ Contact us
 - Twitter: http://www.twitter.com/vplayengine/
 - Facebook: https://www.facebook.com/vplayengine/
 - E-Mail: support@v-play.net
+
+License
+-------
+The app sourcecode is released under the MIT license.
+
+Permission is NOT granted to merge, publish, distribute, sublicense and/or
+sell the provided image, audio and video files of this software.
+
+This app uses QZXing, see the license here:
+https://github.com/ftylitak/qzxing/blob/master/LICENSE
+
+If You have any questions about those Agreements, please write to support@v-play.net
+or visit http://v-play.net/.

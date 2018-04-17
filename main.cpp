@@ -4,6 +4,8 @@
 #include <QQmlApplicationEngine>
 #include "cpp/diskcachefactory.h"
 
+#include <QZXing.h> // QZXing framework for barcode scanning
+
 int main(int argc, char *argv[])
 {
   QApplication app(argc, argv);
@@ -27,6 +29,9 @@ int main(int argc, char *argv[])
 
   // 10MB cache for network data (chris bartsch style)
   engine.setNetworkAccessManagerFactory(new DiskCacheFactory(1024 * 1024 * 10));
+
+  // register QZXing qml types for barcode scannning
+  QZXing::registerQMLTypes();
 
   engine.load(QUrl(vplay.mainQmlFileName()));
 

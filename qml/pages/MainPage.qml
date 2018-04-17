@@ -13,7 +13,7 @@ Page {
     interval: 1000
     repeat: true
 
-    property int conferenceStartTime: 1507626000 // 2017-10-10 9am
+    property int conferenceStartTime: 1507622400 // 2017-10-10 10am GMT+2
     Component.onCompleted: triggered()
     onTriggered: {
       var remain = conferenceStartTime - (Date.now() / 1000)
@@ -77,6 +77,8 @@ Page {
       width: parent.width
       spacing: dp(10)
 
+      property real descriptionTextMaxWidth: Math.min(parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2, dp(600))
+
       Column {
         width: parent.width
 
@@ -123,7 +125,7 @@ Page {
               AppText {
                 text: "\nstarting in"
                 color: "white"
-                font.pixelSize: sp(10)
+                font.pixelSize: sp(11)
                 font.bold: true
                 anchors.horizontalCenter: parent.horizontalCenter
               }
@@ -158,7 +160,7 @@ Page {
             AppText {
               width: parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2
               anchors.horizontalCenter: parent.horizontalCenter
-              font.pixelSize: sp(12)
+              font.pixelSize: sp(13)
               horizontalAlignment: Text.AlignHCenter
               wrapMode: Text.WordWrap
               text: "This cross-platform mobile app<br/>was made with <b>Qt 5.9 & the V-Play SDK</b>!"
@@ -167,7 +169,7 @@ Page {
             AppText {
               anchors.horizontalCenter: parent.horizontalCenter
               width: Math.min(parent.width - dp(Theme.navigationBar.defaultBarItemPadding), implicitWidth + dp(Theme.navigationBar.defaultBarItemPadding))
-              font.pixelSize: sp(12)
+              font.pixelSize: sp(13)
               wrapMode: Text.WordWrap
               textFormat: AppText.RichText
               onLinkActivated: nativeUtils.openUrl(link)
@@ -189,7 +191,10 @@ Page {
               flat: false
               anchors.horizontalCenter: parent.horizontalCenter
               text: "More Info & Source Code"
-              onClicked: confirmOpenUrl()
+              onClicked: {
+                amplitude.logEvent("Click MainPage Button",{"label" : text})
+                confirmOpenUrl()
+              }
               verticalMargin: 0
             }
 
@@ -204,12 +209,19 @@ Page {
 
 
       AppText {
-        width: Math.min(parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2, dp(600))
+        width: content.descriptionTextMaxWidth
         anchors.horizontalCenter: parent.horizontalCenter
-        font.pixelSize: sp(12)
+        font.pixelSize: sp(13)
         wrapMode: Text.WordWrap
         color: Theme.secondaryTextColor
         text: "With Qt you can build applications for tomorrow, while delivering value to your customers today. The Qt World Summit offers insight and inspiration to leading technology innovators, industry experts, startups, and the community."
+      }
+
+      AppButton {
+        text: "Show Agenda"
+        anchors.horizontalCenter: parent.horizontalCenter
+        flat: true
+        onClicked: navigationStack.push(Qt.resolvedUrl("RoomPage.qml"), { room: "Agenda" })
       }
 
       // Spacer
@@ -220,9 +232,9 @@ Page {
 
       // More V-Play Features
       AppText {
-        width: Math.min(parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2, dp(600))
+        width: content.descriptionTextMaxWidth
         anchors.horizontalCenter: parent.horizontalCenter
-        font.pixelSize: sp(12)
+        font.pixelSize: sp(13)
         wrapMode: Text.WordWrap
         color: Theme.secondaryTextColor
         text: "V-Play <b>extends Qt</b> with APIs for:"
@@ -230,8 +242,8 @@ Page {
 
       AppText {
         anchors.horizontalCenter: parent.horizontalCenter
-        width: Math.min(parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2, dp(600))
-        font.pixelSize: sp(12)
+        width: content.descriptionTextMaxWidth
+        font.pixelSize: sp(13)
         wrapMode: Text.WordWrap
         color: Theme.secondaryTextColor
         textFormat: AppText.RichText
@@ -246,8 +258,8 @@ Page {
 
       AppText {
         anchors.horizontalCenter: parent.horizontalCenter
-        width: Math.min(parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2, dp(600))
-        font.pixelSize: sp(12)
+        width: content.descriptionTextMaxWidth
+        font.pixelSize: sp(13)
         wrapMode: Text.WordWrap
         color: Theme.secondaryTextColor
         textFormat: AppText.RichText
@@ -266,8 +278,8 @@ Page {
 
       AppText {
         anchors.horizontalCenter: parent.horizontalCenter
-        width: Math.min(parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2, dp(600))
-        font.pixelSize: sp(12)
+        width: content.descriptionTextMaxWidth
+        font.pixelSize: sp(13)
         wrapMode: Text.WordWrap
         color: Theme.secondaryTextColor
         textFormat: AppText.RichText
@@ -307,7 +319,7 @@ Page {
           id: demosText
           width: parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2
           anchors.horizontalCenter: parent.horizontalCenter
-          font.pixelSize: sp(12)
+          font.pixelSize: sp(13)
           horizontalAlignment: Text.AlignHCenter
           wrapMode: Text.WordWrap
           color: Theme.secondaryTextColor
@@ -328,7 +340,7 @@ Page {
 
             AppText {
               text: "One Card! - UNO Game"
-              font.pixelSize: sp(12)
+              font.pixelSize: sp(13)
               anchors.horizontalCenter: parent.horizontalCenter
             }
 
@@ -341,7 +353,7 @@ Page {
 
             AppText {
               width: parent.width
-              font.pixelSize: sp(11)
+              font.pixelSize: sp(12)
               color: Theme.secondaryTextColor
               horizontalAlignment: AppText.AlignHCenter
               text: "Play UNO with your friends in this multiplayer card game!"
@@ -351,6 +363,7 @@ Page {
           MouseArea {
             anchors.fill: unoCol
             onClicked: {
+              amplitude.logEvent("Click MainPage Button",{"label" : "One Card! - UNO Game"})
               var url = Theme.isAndroid ? "https://play.google.com/store/apps/details?id=net.vplay.demos.ONECard" : "https://itunes.apple.com/at/app/id1112447141?mt=8"
               nativeUtils.openUrl(url)
             }
@@ -366,7 +379,7 @@ Page {
 
             AppText {
               text: "V-Play Showcase App"
-              font.pixelSize: sp(12)
+              font.pixelSize: sp(13)
               anchors.horizontalCenter: parent.horizontalCenter
             }
 
@@ -379,7 +392,7 @@ Page {
 
             AppText {
               width: parent.width
-              font.pixelSize: sp(11)
+              font.pixelSize: sp(12)
               color: Theme.secondaryTextColor
               horizontalAlignment: AppText.AlignHCenter
               text: "This app includes all open source demos & examples of V-Play Apps!"
@@ -389,6 +402,7 @@ Page {
           MouseArea {
             anchors.fill: showcaseCol
             onClicked: {
+              amplitude.logEvent("Click MainPage Button",{"label" : "V-Play Showcase App"})
               var url = Theme.isAndroid ? "https://play.google.com/store/apps/details?id=net.vplay.demos.apps.showcaseapp" : "https://itunes.apple.com/at/app/id1040477271?mt=8"
               nativeUtils.openUrl(url)
             }

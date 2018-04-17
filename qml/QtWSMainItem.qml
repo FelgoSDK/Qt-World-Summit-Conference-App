@@ -1,9 +1,11 @@
 import VPlayApps 1.0
 import QtQuick 2.0
 import VPlay 2.0 // for game network
+import VPlayPlugins 1.0 // for NotificationManager
 import QtGraphicalEffects 1.0
 import "pages"
 import "common"
+import "common/social"
 
 Item {
   anchors.fill: parent
@@ -11,12 +13,10 @@ Item {
   // make navigation public
   property alias navigation: navigation
 
-  // game network / multiplayer view (only once per app)
-  property alias gameNetworkViewItem: gameNetworkViewItem //publicly accessible
-  property alias multiplayerViewItem: multiplayerViewItem //publicly accessible
+  // social view (only once per app)
+  property alias socialViewItem: socialView //publicly accessible
 
   Component.onCompleted: {
-    buildPlatformNavigation()  // apply platform specific navigation changes
     if(system.publishBuild) {
       // give 1 point for opening the app
       if(gameNetwork.userScoresInitiallySynced)
@@ -24,14 +24,8 @@ Item {
       else
         gameNetwork.addScoreWhenSynced += 1
     }
-    notificationTimer.start() // schedule notifications after app was started
-  }
-
-  // timer to schedule notifications 4 seconds after app startup
-  Timer {
-    id: notificationTimer
-    interval: 4000
-    onTriggered: scheduleNotificationsForFavorites()
+    notificationTimer.start() // schedule notification at app-start
+    checkFeedbackDialog() // check app starts and show feedback dialog
   }
 
   // handle data loading failed
@@ -39,32 +33,126 @@ Item {
     target: DataModel
     onLoadingFailed: NativeDialog.confirm("Failed to update conference data, please try again later.")
     onFavoriteAdded: {
+      console.debug("favorite added")
       if(gameNetwork.userScoresInitiallySynced)
         gameNetwork.reportRelativeScore(1)
       else
         gameNetwork.addScoreWhenSynced += 1
+
+
+      // only schedule a notification for the changed talk, not for all again
+      scheduleNotificationForTalk(talk.id)
+
+      amplitude.logEvent("Favor Talk",{"title" : talk.title, "talkId" : talk.id})
     }
     onFavoriteRemoved: {
+      console.debug("favorite removed")
       if(gameNetwork.userScoresInitiallySynced && gameNetwork.userHighscoreForCurrentActiveLeaderboard > 0)
         gameNetwork.reportRelativeScore(-1)
       else if(!gameNetwork.userScoresInitiallySynced)
         gameNetwork.addScoreWhenSynced -= 1
+
+      cancelNotificationForTalk(talk.id)
+
+      amplitude.logEvent("Unfavor Talk",{"title" : talk.title, "talkId" : talk.id})
     }
-    onFavoritesChanged: scheduleNotificationsForFavorites()
+    onFavoritesChanged: {
+      // the schedule call is stopped below anyways, if the notificationTimer did not complete
+      // with this check, we would not allow push not syncing if the user is offline, thus do not add this
+      //if(!gameNetwork.userInitiallyInSync) {
+      //  console.debug("favorties changed, but user is not synced with server yet thus wait")
+      //  return
+      //}
+
+      console.debug("onFavoritesChanged")
+      // dont reschedule all when favorites changed - they are scheduled indidividually instead as a complete reschedule is a lenghty operation
+      //scheduleNotificationsForFavorites()
+    }
     onNotificationsEnabledChanged: {
+       console.debug("onNotificationsEnabledChanged, reschedule notifications")
       scheduleNotificationsForFavorites()
     }
   }
 
-  // handle theme switching (apply navigation changes)
-  Connections {
-    target: Theme
-    onPlatformChanged: buildPlatformNavigation()
+  // timer to schedule notifications several seconds after app startup
+  Timer {
+    id: notificationTimer
+    interval: 8000 // we can delay this, is not time-critical to happen initially
+    //running: true // start the timer when the compoent was loaded - it is started from onCompleted after the navigation was setup
+    onTriggered: {
+      console.debug("notificationTimer.triggered", running)
+      scheduleNotificationsForFavorites()
+    }
+  }
+
+
+  // scheduleNotificationsForFavorites
+  function scheduleNotificationsForFavorites() {
+    console.debug("attempting scheduleNotificationsForFavorites()")
+
+    if(notificationTimer.running) {
+      console.debug("notificationTimer at initialization is currently running, dont update yet")
+      return
+    }
+
+    console.debug("scheduling notifications now")
+
+    // TODO: only re-schedule, if the current nofications changed. this may be a lengthy process
+
+    notificationManager.cancelAllNotifications()
+    if(!DataModel.notificationsEnabled || !DataModel.favorites || !DataModel.talks)
+      return
+
+    for(var idx in DataModel.favorites) {
+      var talkId = DataModel.favorites[idx]
+      scheduleNotificationForTalk(talkId)
+    }
+
+    // add notification before world summit starts!
+    var nowTime = new Date().getTime()
+    var eveningBeforeConferenceTime = new Date("2017-10-09T21:00.000"+DataModel.timeZone).getTime()
+    if(nowTime < eveningBeforeConferenceTime) {
+      var text = "V-Play wishes all the best for Qt World Summit 2017!"
+      var notification = {
+        notificationId: -1,
+        message: text,
+        timestamp: Math.round(eveningBeforeConferenceTime / 1000) // utc seconds
+      }
+      notificationManager.schedule(notification)
+    }
+  }
+
+  // scheduleNotificationForTalk
+  function scheduleNotificationForTalk(talkId) {
+    if(DataModel.loaded && DataModel.talks && DataModel.talks[talkId]) {
+      var talk = DataModel.talks[talkId]
+      var text = talk["title"]+" starts "+talk.start+" at "+talk["room"]+"."
+
+      var nowTime = new Date().getTime()
+      var utcDateStr = talk.day+"T"+talk.start+".000"+DataModel.timeZone
+      var notificationTime = new Date(utcDateStr).getTime()
+      notificationTime = notificationTime - 10 * 60 * 1000 // 10 minutes before
+
+      if(nowTime < notificationTime) {
+        var notification = {
+          notificationId: talkId,
+          message: text,
+          timestamp: Math.round(notificationTime / 1000) // utc seconds
+        }
+        notificationManager.schedule(notification)
+      }
+    }
+  }
+
+  function cancelNotificationForTalk(talkId) {
+    notificationManager.cancelNotification(talkId)
   }
 
   // app navigation
   Navigation {
     id: navigation
+    property string previousPageTitle: ""
+    property string previousPagePlatform: ""
     property var currentPage: {
       if(!currentNavigationItem)
         return null
@@ -74,6 +162,20 @@ Item {
       else
         return currentNavigationItem.page
     }
+    // track previous page & platform changes to restore previous page on platform-switch when navigation changes
+    onCurrentPageChanged: {
+      if(previousPagePlatform !== Theme.platform && previousPageTitle !== "") {
+        previousPagePlatform = Theme.platform
+
+        // current page changed due to platform switch -> restore previous page
+        restorePageTimer.previousPageTitle = previousPageTitle
+        restorePageTimer.restart()
+      }
+      else if(!!currentPage) {
+        previousPagePlatform = Theme.platform
+        previousPageTitle = currentPage.title
+      }
+    }
 
     // automatically load data if not loaded and schedule/favorites page is opened
     onCurrentIndexChanged: {
@@ -81,6 +183,9 @@ Item {
         if(!DataModel.loaded && isOnline)
           DataModel.loadData()
       }
+    }
+    onCurrentNavigationItemChanged: {
+      amplitude.logEvent("Open Page",{"title" : currentNavigationItem.title})
     }
 
     // Android drawer header item
@@ -149,28 +254,30 @@ Item {
 
     NavigationItem {
       title: "About"
-      iconComponent: Item {
-        height: parent.height
-        width: height
-
-        property bool selected: parent && parent.selected
-
-        Icon {
-          anchors.centerIn: parent
+      iconComponent: Component {
+        Item {
+          height: !!parent ? parent.height : 0
           width: height
-          height: parent.height
-          icon: IconType.home
-          color: !parent.selected ? Theme.textColor  : Theme.tintColor
-          visible: !vplayIcon.visible
-        }
 
-        Image {
-          id: vplayIcon
-          height: parent.height
-          anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
-          fillMode: Image.PreserveAspectFit
-          source: !parent.selected ? (Theme.isAndroid ? "../assets/Qt_logo_Android_off.png" : "../assets/Qt_logo_iOS_off.png") : "../assets/Qt_logo.png"
-          visible: Theme.isIos || Theme.backgroundColor.r == 1 && Theme.backgroundColor.g == 1 && Theme.backgroundColor.b == 1
+          property bool selected: parent && parent.selected
+
+          Icon {
+            anchors.centerIn: parent
+            width: height
+            height: parent.height
+            icon: IconType.home
+            color: !parent.selected ? Theme.textColor  : Theme.tintColor
+            visible: !vplayIcon.visible
+          }
+
+          Image {
+            id: vplayIcon
+            height: parent.height
+            anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
+            fillMode: Image.PreserveAspectFit
+            source: !parent.selected ? (Theme.isAndroid ? "../assets/Qt_logo_Android_off.png" : "../assets/Qt_logo_iOS_off.png") : "../assets/Qt_logo.png"
+            visible: true // Theme.isIos || Theme.backgroundColor.r == 1 && Theme.backgroundColor.g == 1 && Theme.backgroundColor.b == 1
+          }
         }
       }
 
@@ -192,7 +299,8 @@ Item {
             leftColumnIndex = 0
         }
 
-        TimetablePage { }
+        TimetablePage {
+        }
       }
     } // timetable
 
@@ -200,281 +308,349 @@ Item {
       title: "Favorites"
       icon: IconType.star
 
-      NavigationStack {
-        splitView: tablet && landscape
-        FavoritesPage {}
-      }
+      asynchronous: true
+      sourceComponent: favoritesComponent
     } // favorites
 
     NavigationItem {
       title: "Speakers"
       icon: IconType.microphone
 
-      NavigationStack {
-        splitView: landscape && tablet
-        SpeakersPage {}
-      }
+      asynchronous: true
+      sourceComponent: speakersComponent
     } // speakers
-  } // nav
 
-  // components for dynamic tabs/drawer entries
-  Component {
-    id: tracksNavItemComponent
-    NavigationItem {
-      title: "Tracks"
-      icon: IconType.tag
-
-      NavigationStack {
-        splitView: landscape && tablet
-        TracksPage {}
-      }
-    }
-  } // tracks
-
-  // components for dynamic tabs/drawer entries
-  Component {
-    id: venueNavItemComponent
-    NavigationItem {
-      title: "Venue"
-      icon: IconType.building
-
-      NavigationStack {
-        VenuePage {}
-      }
-    }
-  } // venue
-
-  // components for dynamic tabs/drawer entries
-  Component {
-    id: settingsNavItemComponent
-    NavigationItem {
-      title: "Settings"
-      icon: IconType.gears
-
-      NavigationStack {
-        SettingsPage {}
-      }
-    }
-  } // settings
-
-  Component {
-    id: moreNavItemComponent
     NavigationItem {
       title: "More"
       icon: IconType.ellipsish
+      showItem: !Theme.isAndroid
 
-      NavigationStack {
-        splitView: tablet && landscape
-        MorePage {}
-      }
+      sourceComponent: moreComponent
+      asynchronous: true
     }
-  } // more
 
-  // dummyNavItemComponent for adding gameNetwork/multiplayer pages to navigation (android)
-  Component {
-    id: dummyNavItemComponent
+    // social
     NavigationItem {
-      id: dummyNavItem
+      title: "Business Meet"
+      icon: IconType.group
+      showItem: Theme.isAndroid
+
+      asynchronous: true
+      sourceComponent: businessMeetComponent
+    } // business meet
+
+    NavigationItem {
+      title: "Profile"
+      icon: IconType.user
+      showItem: Theme.isAndroid
+
+      asynchronous: true
+      sourceComponent: profileComponent
+    } // profile
+
+    NavigationItem {
+      title: "Chat"
+      icon: IconType.comment
+      showItem: Theme.isAndroid
+
+      asynchronous: true
+      sourceComponent: chatComponent
+    } // chat
+
+    NavigationItem {
       title: "Leaderboard"
-      icon: IconType.flagcheckered // gamepad, futbolo, group, listol. sortnumericasc
+      icon: IconType.flagcheckered
+      showItem: Theme.isAndroid
 
-      property var targetItem
-      property string targetState
+      asynchronous: true
+      sourceComponent: leaderboardComponent
+    } // leaderboard
 
-      Page {
-        id: dummyPage
-        navigationBarHidden: true
-        title: "DummyPage"
+    NavigationItem {
+      title: "Tracks"
+      icon: IconType.tag
+      showItem: Theme.isAndroid
 
-        property Item targetItem: dummyNavItem.targetItem
-        property string targetState: dummyNavItem.targetState
+      asynchronous: true
+      sourceComponent: tracksComponent
+    } // tracks
 
-        // connection to navigation, show target page if dummy is selected
-        Connections {
-          target: navigation || null
-          onCurrentNavigationItemChanged: {
-            if(navigation.currentNavigationItem === dummyNavItem) {
-              gameNetworkViewItem.parent = hiddenItemContainer
-              multiplayerViewItem.parent = hiddenItemContainer
-              dummyPage.targetItem.viewState = dummyPage.targetState
-              dummyPage.targetItem.parent = contentArea
-            }
-          }
+
+    NavigationItem {
+      title: "Venue"
+      icon: IconType.building
+      showItem: Theme.isAndroid
+
+      sourceComponent: venueComponent
+      asynchronous: true
+    } // venue
+
+    NavigationItem {
+      title: "QR Contacts"
+      icon: IconType.qrcode
+      showItem: Theme.isAndroid
+
+      asynchronous: true
+      sourceComponent: contactsComponent
+    } // qr contacts
+
+    NavigationItem {
+      title: "Settings"
+      icon: IconType.gears
+      showItem: Theme.isAndroid
+
+      sourceComponent: settingsComponent
+      asynchronous: true
+    } // settings
+
+    NavigationItem {
+      title: "About V-Play"
+      showItem: Theme.isAndroid
+      iconComponent: Item {
+        height: parent.height
+        width: height
+
+        property bool selected: parent && parent.selected
+
+        Icon {
+          anchors.centerIn: parent
+          width: height
+          height: parent.height
+          icon: IconType.home
+          color: !parent.selected ? Theme.textColor  : Theme.tintColor
+          visible: !vplayIcon.visible
         }
 
-        // connection to target page, listen to state change and switch active navitem
-        Connections {
-          target: navigation.currentNavigationItem === dummyNavItem && dummyNavItem.targetItem === gameNetworkViewItem && gameNetworkViewItem.gnView || null
-          onStateChanged: {
-            var targetItem = dummyNavItem.targetItem
-            var state = targetItem.viewState
-            if(Theme.isAndroid && state !== dummyNavItem.targetState) {
-              if(state === "leaderboard")
-                navigation.currentIndex = 7
-              else if(state === "profile")
-                navigation.currentIndex = 8
-            }
-          }
-        }
-
-        Item {
-          id: contentArea
-          y: Theme.statusBarHeight
-          width: parent.width
-          height: parent.height - y
-
-          property bool splitViewActive: dummyPage.navigationStack && dummyPage.navigationStack.splitViewActive
+        Image {
+          id: vplayIcon
+          height: parent.height
+          anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
+          fillMode: Image.PreserveAspectFit
+          source: !parent.selected ? "../assets/VPlay_icon_nav_off.png" : "../assets/VPlay_icon_nav.png"
+          visible: Theme.isIos || Theme.backgroundColor.r == 1 && Theme.backgroundColor.g == 1 && Theme.backgroundColor.b == 1
         }
       }
-    }
-  } // dummy
 
-  // dummy page component for wrapping gn/multiplayer views on iOS
+      sourceComponent: aboutVPlayComponent
+      asynchronous: true
+    } // About V-Play
+  } // nav
+
   Component {
-    id: dummyPageComponent
-
-    Page {
-      id: dummyPage
-      navigationBarHidden: true
-      title: "DummyPage"
-
-      property Item targetItem
-      property string targetState
-      Component.onCompleted: {
-        gameNetworkViewItem.parent = hiddenItemContainer
-        multiplayerViewItem.parent = hiddenItemContainer
-        targetItem.viewState = targetState
-        targetItem.parent = contentArea
-      }
-
-      Item {
-        id: contentArea
-        y: Theme.statusBarHeight
-        width: parent.width
-        height: parent.height - y
-
-        property bool splitViewActive: dummyPage.navigationStack && dummyPage.navigationStack.splitViewActive
-      }
+    id: favoritesComponent
+    NavigationStack {
+      splitView: tablet && landscape
+      Component.onCompleted: push(Qt.resolvedUrl("pages/FavoritesPage.qml"))
     }
   }
 
-  Item {
-    id: hiddenItemContainer
+  Component {
+    id: speakersComponent
+    NavigationStack {
+      splitView: landscape && tablet
+      Component.onCompleted: push(Qt.resolvedUrl("pages/SpeakersPage.qml"))
+    }
+  }
+
+  Component {
+    id: moreComponent
+    NavigationStack {
+      splitView: tablet && landscape
+      Component.onCompleted: push(Qt.resolvedUrl("pages/MorePage.qml"))
+    }
+  }
+
+  Component {
+    id: businessMeetComponent
+    NavigationStack {
+      Component.onCompleted: push(socialView.businessMeetPage)
+    }
+  }
+
+  Component {
+    id: profileComponent
+    NavigationStack {
+      Component.onCompleted: push(socialView.profilePage)
+    }
+  }
+
+  Component {
+    id: chatComponent
+    NavigationStack {
+      Component.onCompleted: push(socialView.inboxPage)
+    }
+  }
+
+  Component {
+    id: leaderboardComponent
+    NavigationStack {
+      Component.onCompleted: push(socialView.leaderboardPage)
+    }
+  }
+
+  Component {
+    id: tracksComponent
+    NavigationStack {
+      splitView: landscape && tablet
+      Component.onCompleted: push(Qt.resolvedUrl("pages/TracksPage.qml"))
+    }
+  }
+
+  Component {
+    id: venueComponent
+    NavigationStack {
+      Component.onCompleted: push(Qt.resolvedUrl("pages/VenuePage.qml"))
+    }
+  }
+
+  Component {
+    id: contactsComponent
+    NavigationStack {
+      // Note: QZXing library for barcode scanning is not available with QML Live Reloading
+      Component.onCompleted: push(Qt.resolvedUrl("pages/ContactsPage.qml"))
+    }
+  }
+
+  Component {
+    id: settingsComponent
+    NavigationStack {
+      Component.onCompleted: push(Qt.resolvedUrl("pages/SettingsPage.qml"))
+    }
+  }
+
+  Component {
+    id: aboutVPlayComponent
+    NavigationStack {
+      Component.onCompleted: push(Qt.resolvedUrl("pages/AboutVPlayPage.qml"))
+    }
+  }
+
+  SocialView {
+    id: socialView
     visible: false
     anchors.fill: parent
+    tintColor: Theme.tintColor
 
-    GameNetworkViewItem {
-      id: gameNetworkViewItem
-      state: "leaderboard"
-      anchors.fill: parent
-      onBackClicked: {
-        if(Theme.isAndroid)
-          navigation.drawer.open()
-        else {
-          gameNetworkViewItem.parent = hiddenItemContainer
-          navigation.currentPage.navigationStack.popAllExceptFirst()
-        }
-      }
-    }
+    profileUserDelegate: SocialProfileDelegate { }
+    leaderboardUserDelegate: SocialLeaderboardDelegate { }
 
-    // multiplayer view (only once per app)
-    MultiplayerViewItem {
-      id: multiplayerViewItem
-      state: "inbox"
-      anchors.fill: parent
-      onBackClicked: {
-        if(Theme.isAndroid)
-          navigation.drawer.open()
-        else {
-          multiplayerViewItem.parent = hiddenItemContainer
-          navigation.currentPage.navigationStack.popAllExceptFirst()
-        }
+    property Component businessMeetPage: SocialUserSearchPage {
+      id: businessMeetPage
+      title: "Business Meet"
+      filterToUsersWithCustomData: true // only search users with custom data
+
+      // replace default user delegate to also show custom data
+      userSearchUserDelegate: SocialSearchDelegate { }
+
+      // open profile when user is selected
+      onUserSelected: {
+        socialViewItem.pushProfilePage(gameNetworkUser, businessMeetPage.navigationStack,
+                               { friendStatus: modelData.friendStatus})
       }
     }
   }
 
-  // addDummyNavItem - adds dummy nav item to app-drawer, which opens GameNetwork/Multiplayer page
-  function addDummyNavItem(targetItem, targetState, title, icon) {
-    navigation.addNavigationItem(dummyNavItemComponent)
-    var dummy = navigation.getNavigationItem(navigation.count - 1)
-    dummy.targetItem = targetItem
-    dummy.targetState = targetState
-    dummy.title = title
-    dummy.icon = icon
-  }
+  Timer {
+    id: restorePageTimer
+    interval: 5
+    property string previousPageTitle: ""
+    onTriggered: {
+      var activeTitle = restorePageTimer.previousPageTitle
 
-  // buildPlatformNavigation - apply navigation changes for different platforms
-  function buildPlatformNavigation() {
-    var activeTitle = navigation.currentPage ? navigation.currentPage.title : ""
-    var targetItem = navigation.currentPage && navigation.currentPage.targetItem || null
-    var targetState = navigation.currentPage && navigation.currentPage.targetState ? navigation.currentPage.targetState : ""
-
-    // hide multiplayer/gamenetwork views
-    gameNetworkViewItem.parent = hiddenItemContainer
-    multiplayerViewItem.parent = hiddenItemContainer
-
-    // remove previous platform specific pages
-    while(navigation.count > 4) {
-      navigation.removeNavigationItem(navigation.count - 1)
-    }
-
-    // add new platform specific pages
-    if(Theme.isAndroid) {
-      navigation.addNavigationItem(tracksNavItemComponent)
-      navigation.addNavigationItem(venueNavItemComponent)
-      navigation.addNavigationItem(settingsNavItemComponent)
-      addDummyNavItem(gameNetworkViewItem, "leaderboard", "Leaderboard", IconType.flagcheckered)
-      addDummyNavItem(gameNetworkViewItem, "profile", "Profile", IconType.user)
-      addDummyNavItem(multiplayerViewItem, "inbox", "Chat", IconType.comment)
-      addDummyNavItem(multiplayerViewItem, "friends", "Friends", IconType.group)
-
-      if(activeTitle === "DummyPage" || activeTitle === "More") { // "More" is used when splitView is active
-        if(targetItem === multiplayerViewItem && targetState === "friends")
+      // set active Android NavigationItem in drawer
+      if(Theme.isAndroid) {
+        if(activeTitle === "About V-Play")
+          navigation.currentIndex = 12
+        else if(activeTitle === "Settings")
+          navigation.currentIndex = 11
+        else if(activeTitle === "Contacts")
           navigation.currentIndex = 10
-        else if (targetItem === multiplayerViewItem)
+        else if(activeTitle === "Venue")
           navigation.currentIndex = 9
-        else if(targetItem === gameNetworkViewItem && targetState === "profile")
+        else if(activeTitle === "Tracks")
           navigation.currentIndex = 8
-        else if (targetItem === gameNetworkViewItem)
+        else if(activeTitle === "Highscores")
           navigation.currentIndex = 7
+        else if(activeTitle === "Inbox")
+          navigation.currentIndex = 6
+        else if(activeTitle === "User Profile")
+          navigation.currentIndex = 5
+        else if(activeTitle === "Business Meet")
+          navigation.currentIndex = 4
       }
-      else if(activeTitle === "Settings")
-        navigation.currentIndex = 6
-      else if(activeTitle === "Venue")
-        navigation.currentIndex = 5
-      else if(activeTitle === "Tracks")
-        navigation.currentIndex = 4
-    }
-    else {
-      navigation.addNavigationItem(moreNavItemComponent)
+      else {
+        // push active Page to More-Page on iOS
+        var target = ""
+        if(activeTitle === "Highscores")
+          target = socialView.leaderboardPage
+        else if(activeTitle === "Inbox")
+          target = socialView.inboxPage
+        else if(activeTitle === "User Profile")
+          target = socialView.profilePage
+        else if(activeTitle === "Business Meet")
+          target = socialView.businessMeetPage
+        else if(activeTitle === "About V-Play")
+          target = Qt.resolvedUrl("pages/AboutVPlayPage.qml")
+        else if(activeTitle === "Settings")
+          target = Qt.resolvedUrl("pages/SettingsPage.qml")
+        else if(activeTitle === "Contacts")
+          target = Qt.resolvedUrl("pages/ContactsPage.qml")
+        else if(activeTitle === "Venue")
+          target = Qt.resolvedUrl("pages/VenuePage.qml")
+        else if(activeTitle === "Tracks")
+          target = Qt.resolvedUrl("pages/TracksPage.qml")
 
-      if(!navigation.currentPage)
+        if (target != "") {
+          navigation.currentIndex = navigation.countVisible - 1 // open more page
+          navigation.currentPage.navigationStack.push(target)
+        }
+      }
+    }
+  }
+
+  // openInbox activates inbox navigation item on Android or more navigation item with inbox page on iOS
+  function openInbox() {
+    if(Theme.isAndroid)
+      navigation.currentIndex = 6 // go to inbox navigation item
+    else {
+      navigation.currentIndex = navigation.count - 1 // open more page
+      if(!navigation.currentPage || navigation.currentPage.title === "Inbox")
         return
 
-      // open settings page when active
-      if(activeTitle === "DummyPage") {
-        navigation.currentIndex = navigation.count - 1 // open more page
-        if(targetItem === multiplayerViewItem && targetState === "friends")
-          navigation.currentPage.navigationStack.push(dummyPageComponent, { targetItem: multiplayerViewItem, targetState: "friends" })
-        else if (targetItem === multiplayerViewItem)
-          navigation.currentPage.navigationStack.push(dummyPageComponent, { targetItem: multiplayerViewItem, targetState: "inbox" })
-        else if(targetItem === gameNetworkViewItem && targetState === "profile")
-          navigation.currentPage.navigationStack.push(dummyPageComponent, { targetItem: gameNetworkViewItem, targetState: "profile" })
-        else if (targetItem === gameNetworkViewItem)
-          navigation.currentPage.navigationStack.push(dummyPageComponent, { targetItem: gameNetworkViewItem, targetState: "leaderboard" })
-      }
-      else if(activeTitle === "Settings") {
-        navigation.currentIndex = navigation.count - 1 // open more page
-        navigation.currentPage.navigationStack.push(Qt.resolvedUrl("pages/SettingsPage.qml"))
-      }
-      else if(activeTitle === "Venue") {
-        navigation.currentIndex = navigation.count - 1 // open more page
-        navigation.currentPage.navigationStack.push(Qt.resolvedUrl("pages/VenuePage.qml"))
-      }
-      else if(activeTitle === "Tracks") {
-        navigation.currentIndex = navigation.count - 1 // open more page
-        navigation.currentPage.navigationStack.push(Qt.resolvedUrl("pages/TracksPage.qml"))
-      }
+      navigation.currentPage.navigationStack.push(socialView.inboxPage) // push inbox page
+    }
+  }
+
+  // check app starts and show feedback dialog if required
+  function checkFeedbackDialog() {
+    if(DataModel.localAppStarts > 5 && !DataModel.feedBackSent) {
+      likeDialog.open()
+    }
+  }
+
+  FeedbackDialog {
+    id: feedbackDialog
+  }
+
+  RatingDialog {
+    id: ratingDialog
+  }
+
+  LikeDialog {
+    id: likeDialog
+    onCanceled: {
+      amplitude.logEvent("Dislike App")
+
+      // open the feedback dialog instead
+      likeDialog.close()
+      feedbackDialog.open()
+    }
+    onAccepted: {
+      amplitude.logEvent("Like App")
+
+      // open the rating dialog instead
+      likeDialog.close()
+      ratingDialog.open()
     }
   }
 }

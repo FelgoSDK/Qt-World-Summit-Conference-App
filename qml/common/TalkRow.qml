@@ -151,11 +151,16 @@ Rectangle {
           Layout.alignment: Qt.AlignVCenter
           wrapMode: Text.WordWrap
           color: _.iconColor
-          text: talk.start+" - "+talk.end
+          text: getWeekDay() + "  " + talk.start+" - "+talk.end
+          function getWeekDay() {
+            var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            var date = new Date(talk.day+"T00:00.000Z")
+            return days[ date.getUTCDay() ]
+          }
         }
 
         // date
-        Icon {
+        /*Icon {
           Layout.preferredWidth: implicitWidth
           Layout.alignment: Qt.AlignVCenter
           icon: IconType.calendaro
@@ -168,7 +173,7 @@ Rectangle {
           wrapMode: Text.WordWrap
           color: _.iconColor
           text: talk.day
-        }
+        }*/
 
         // language
         Icon {
@@ -315,7 +320,10 @@ Rectangle {
             centerAnimation: true
             touchPoint: Qt.point(webIcon.width * 0.5, webIcon.height)
             anchors.centerIn: parent
-            onClicked: nativeUtils.openUrl("http://www.qtworldsummit.com/sessions/"+talk.slug)
+            onClicked: {
+              amplitude.logEvent("Open Talk In Browser", {"title" : talk.title, "talkId" : talk.id, "url" : "http://www.qtworldsummit.com/sessions/"+talk.slug})
+              nativeUtils.openUrl("http://www.qtworldsummit.com/sessions/"+talk.slug)
+            }
           }
         }
 
@@ -354,7 +362,10 @@ Rectangle {
             centerAnimation: true
             touchPoint: Qt.point(shareIcon.width * 0.5, shareIcon.height)
             anchors.centerIn: parent
-            onClicked: nativeUtils.share("I am attending \"" + talk.title + "\" at Qt World Summit 2016!","http://www.qtworldsummit.com/sessions/"+talk.slug)
+            onClicked: {
+              amplitude.logEvent("Share Talk", {"title" : talk.title, "talkId" : talk.id})
+              nativeUtils.share("I am attending \"" + talk.title + "\" at Qt World Summit 2017!","http://www.qtworldsummit.com/sessions/"+talk.slug)
+            }
           }
         }
       } // icon grid

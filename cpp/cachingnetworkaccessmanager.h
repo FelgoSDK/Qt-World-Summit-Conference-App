@@ -9,6 +9,8 @@ public:
 
   QNetworkReply *createRequest(Operation op, const QNetworkRequest & req, QIODevice * outgoingData) Q_DECL_OVERRIDE;
 
+  void clearIgnoredUrlsFromCache();
+
 private:
   QStringList mUrlIgnoreList;
   bool shouldIgnoreUrl(const QString& url);

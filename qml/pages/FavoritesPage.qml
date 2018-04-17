@@ -11,6 +11,9 @@ Page {
   property var favoritesModel: DataModel.favorites ? prepareFavoritesModel(DataModel.favorites) : []
   readonly property bool dataAvailable: favoritesModel.length > 0
 
+  signal floatingButtonClicked
+  onFloatingButtonClicked: navigation.currentIndex = 1
+
   // update UI when favourites change
   Connections {
     target: DataModel
@@ -36,7 +39,15 @@ Page {
 
   FloatingActionButton {
     icon: IconType.calendaro
-    onClicked: navigation.currentIndex = 1
+    onClicked: floatingButtonClicked()
+
+    property int currentVisibleItemCount: !!favoritesModel ? favoritesModel.length : 0
+
+    opacity: (scheduleItem.listView.lastItemIndex === currentVisibleItemCount - 1) ? 0 : 1
+    enabled: opacity > 0
+    Behavior on opacity {
+      NumberAnimation { duration: 150 }
+    }
   }
 
   // prepareFavoritesModel - package favorites data in array ready to be displayed by TimeTableDaySchedule item

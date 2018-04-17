@@ -21,6 +21,8 @@ Page {
     }
   }
 
+  onPushed: amplitude.logEvent("Open Talk Detail", {"title" : title, "talkId" : item.id})
+
   property var item
   property bool isFavorite: item && item.id ? DataModel.isFavorite(item.id) : false
   readonly property bool loading: _.loadingCount > 0
@@ -179,20 +181,54 @@ Page {
         // divider
         Item {
           width: parent.width
-          height: _.colSpacing * 2
+          height: _.colSpacing
           Rectangle {
             color: _.dividerColor
             width: parent.width
             height: px(1)
-            anchors.centerIn: parent
+            anchors.bottom: parent.bottom
           }
-          visible: descriptionTxt.visible || abstractTxt.visible
+        }
+
+
+        SimpleSection {
+          title: "Rate This Talk"
         }
 
         // spacing
         Item {
           width: parent.width
-          height: 1
+          height: _.colSpacing
+        }
+
+        RatingRow {
+          width: parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2
+          anchors.horizontalCenter: parent.horizontalCenter
+          talk: item
+        }
+
+        // divider
+        Item {
+          width: parent.width
+          height: _.colSpacing
+          visible: abstractTxt.visible
+          Rectangle {
+            color: _.dividerColor
+            width: parent.width
+            height: px(1)
+            anchors.bottom: parent.bottom
+          }
+        }
+
+        SimpleSection {
+          title: "Abstract"
+          visible: abstractTxt.visible
+        }
+
+        // spacing
+        Item {
+          width: parent.width
+          height: _.rowSpacing
           visible: abstractTxt.visible
         }
 
@@ -208,11 +244,26 @@ Page {
           visible: item.abstract.length > 0
         }
 
+        // divider
+        Item {
+          width: parent.width
+          height: _.colSpacing
+          Rectangle {
+            color: _.dividerColor
+            width: parent.width
+            height: px(1)
+            anchors.bottom: parent.bottom
+          }
+        }
+
+        SimpleSection {
+          title: "Description"
+        }
+
         // spacing
         Item {
           width: parent.width
-          height: _.rowSpacing * 0.5
-          visible: abstractTxt.visible
+          height: _.rowSpacing
         }
 
         // description
@@ -222,7 +273,7 @@ Page {
           width: parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2
           anchors.horizontalCenter: parent.horizontalCenter
           wrapMode: Text.WordWrap
-          font.pixelSize: sp(14)
+          font.pixelSize: sp(15)
           visible: item.description.length > 0
         }
 

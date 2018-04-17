@@ -75,6 +75,7 @@ Page {
             minimumWidth: parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2
             anchors.horizontalCenter: parent.horizontalCenter
             onClicked: {
+              amplitude.logEvent("Plan Route")
               if (Theme.isIos){
                 Qt.openUrlExternally("http://maps.apple.com/?q=bcc, Alexanderstraße 11, 10178 Berlin, Germany")
               } else {

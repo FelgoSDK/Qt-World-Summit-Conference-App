@@ -154,11 +154,25 @@ Item {
         color: isFavorite || favoriteArea.pressed ? Theme.tintColor : Theme.secondaryTextColor
 
         property bool isFavorite: item && item.id ? DataModel.isFavorite(item.id) : false
+        property bool updateWhenVisible: false
 
-        // update UI when favorites change
+        // update UI when favorites change while visible
         Connections {
           target: DataModel
-          onFavoritesChanged: favoriteIcon.isFavorite = modelData && modelData.id ? DataModel.isFavorite(modelData.id) : false
+          onFavoritesChanged: {
+            if(visible)
+              favoriteIcon.isFavorite = modelData && modelData.id ? DataModel.isFavorite(modelData.id) : false
+            else
+              favoriteIcon.updateWhenVisible = true
+          }
+        }
+
+        // update UI when favorites changed while invisible
+        onVisibleChanged: {
+          if(visible && updateWhenVisible) {
+            favoriteIcon.isFavorite = modelData && modelData.id ? DataModel.isFavorite(modelData.id) : false
+            updateWhenVisible = false
+          }
         }
 
         // add/remove from favorites
@@ -201,7 +215,7 @@ Item {
         Layout.minimumWidth: implicitWidth
         Layout.preferredHeight: implicitHeight
         Layout.columnSpan: 2
-        text: modelData.room && modelData.room !== "Qt World Summit 2016" ? modelData.room : ""
+        text: modelData.room && modelData.room !== "Qt World Summit 2017" ? modelData.room : ""
         font.pixelSize: sp(scheduleListItem.style.fontSizeDetailText)
         font.italic: true
         wrapMode: Text.NoWrap

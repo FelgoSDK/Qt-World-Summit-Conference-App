@@ -14,6 +14,10 @@ Page {
   readonly property var currentContentItem: swipeView.itemAt(swipeView.currentIndex)
   readonly property bool currentContentLoading: !currentContentItem ? false : currentContentItem.loading
 
+  signal floatingButtonClicked
+  onFloatingButtonClicked: navigation.currentIndex = 2
+
+
   AppText {
     text: "No data available."
     visible: !dataAvailable
@@ -26,6 +30,16 @@ Page {
     showIcon: false
     visible: dataAvailable
     contentContainer: swipeView
+    onCurrentItemChanged: {
+      if(dataAvailable) amplitude.logEvent("View Day",{"day" : currentItem.text})
+    }
+
+    // auto select tab of current day after tab-bar was built
+    property int autoSelectTab: -1
+    onCountChanged: {
+      if(autoSelectTab > 0 && dataAvailable && appTabBar.count === daysModel.length)
+        appTabBar.currentIndex = autoSelectTab
+    }
 
     Repeater {
       // dummyData to avoid tabcontrol issue when no children
@@ -59,6 +73,7 @@ Page {
         scheduleData: modelData.schedule
         onSearchAccepted: {
           if(text !== "") {
+            amplitude.logEvent("Search Talk",{"term" : text})
             var result = DataModel.search(text)
             page.navigationStack.leftColumnIndex = 1
             page.navigationStack.popAllExceptFirstAndPush(Qt.resolvedUrl("SearchPage.qml"), { searchModel: result })
@@ -76,7 +91,15 @@ Page {
 
   FloatingActionButton {
     icon: IconType.star
-    onClicked: navigation.currentIndex = 2
+    onClicked: floatingButtonClicked()
+
+    property int currentVisibleItemCount: !!daysModel && !!daysModel[swipeView.currentIndex] ? daysModel[swipeView.currentIndex].schedule.length : 0
+
+    opacity: (swipeView.currentItem.listView.lastItemIndex === currentVisibleItemCount - 1) ? 0 : 1
+    enabled: opacity > 0
+    Behavior on opacity {
+      NumberAnimation { duration: 150 }
+    }
   }
 
   // prepareDaysModel - package schedule data in array with conference days (for tabs)
@@ -84,6 +107,8 @@ Page {
     if(!(data.conference && data.conference.days))
       return []
 
+
+    var currentDate = new Date()
     var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
     var model = []
@@ -98,6 +123,13 @@ Page {
       }
 
       model.push(dayModel)
+
+      // activate tab if its current day
+      if(currentDate.getDate() === date.getDate() &&
+          currentDate.getMonth() === date.getMonth() &&
+          currentDate.getFullYear() === date.getFullYear()) {
+        appTabBar.autoSelectTab = model.length - 1
+      }
     }
 
     return model

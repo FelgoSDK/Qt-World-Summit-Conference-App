@@ -7,6 +7,8 @@ Page {
   title: DataModel.speakers && DataModel.speakers[speakerID] ? DataModel.speakers[speakerID].first_name + " " + DataModel.speakers[speakerID].last_name : ""
   property string speakerID
 
+  onPushed: amplitude.logEvent("Open Speaker Detail",{"title" : title, "speakerId" : speakerID})
+
   // private members
   Item {
     id: _

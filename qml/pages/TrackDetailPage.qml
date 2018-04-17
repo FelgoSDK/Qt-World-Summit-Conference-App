@@ -6,6 +6,8 @@ Page {
   id: page
   title: track.title
 
+  onPushed: amplitude.logEvent("View Track",{"track" : title})
+
   property var track
 
   TimetableDaySchedule {

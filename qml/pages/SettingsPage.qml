@@ -31,15 +31,22 @@ Page {
         Layout.alignment: Qt.AlignHCenter
         text: "Update Conference Data"
         enabled: !DataModel.loading
-        onClicked: DataModel.loadData()
+        onClicked: {
+          amplitude.logEvent("Update Conference Data")
+          DataModel.loadData()
+        }
         verticalMargin: 0
       }
 
       AppButton {
         Layout.alignment: Qt.AlignHCenter
         text: "Clear Cached Data"
-        enabled: DataModel.loaded && !DataModel.loading
-        onClicked: DataModel.clearCache()
+        enabled: false//DataModel.loaded && !DataModel.loading
+        visible: false
+        onClicked: {
+          amplitude.logEvent("Clear Cache")
+          DataModel.clearCache()
+        }
         verticalMargin: 0
       }
 
@@ -71,7 +78,10 @@ Page {
           anchors.verticalCenter: parent.verticalCenter
           checked: DataModel.notificationsEnabled
           updateChecked: false
-          onToggled: DataModel.notificationsEnabled = !checked
+          onToggled: {
+            amplitude.logEvent(!checked ? "Check Session Reminder" : "Uncheck Session Reminder")
+            DataModel.notificationsEnabled = !checked
+          }
         } // AppSwitch
       }
 
@@ -113,14 +123,20 @@ Page {
           anchors.verticalCenter: parent.verticalCenter
           property string target: Theme.platform !== "ios" ? "iOS" : "Android"
           text: system.isPlatform(System.IOS) && target == "Android" ? "Custom" : target
-          onClicked: Theme.platform = target.toLowerCase()
+          onClicked: {
+            amplitude.logEvent("Change Theme", {"theme" : target, "platform" : (system.isPlatform(System.IOS) ? "iOS" : "Android")})
+            Theme.platform = target.toLowerCase()
+          }
           flat: false
           verticalMargin: 0
         }
 
         AppButton {
           text: "Reset"
-          onClicked: Theme.reset()
+          onClicked: {
+            amplitude.logEvent("Reset Theme", {"oldTheme" : (Theme.platform == "ios" ? "iOS" : "Android")})
+            Theme.reset()
+          }
           flat: true
           verticalMargin: 0
         }
@@ -153,7 +169,10 @@ Page {
         // default color
         ColorButton {
           color: Theme.isIos ? "#007aff" : "#3f5ab5"
-          onClicked: Theme.colors.tintColor = Qt.binding(function() { return Theme.isIos ? "#007aff" : (Theme.isAndroid ? "#3f51b5" : "#01a9e2")})
+          onClicked: {
+            Theme.colors.tintColor = Qt.binding(function() { return Theme.isIos ? "#007aff" : (Theme.isAndroid ? "#3f51b5" : "#01a9e2")})
+            amplitude.logEvent("Change Tint Color", {"color" : Theme.colors.tintColor, "index" : 0})
+          }
         }
 
         // other colors
@@ -161,7 +180,10 @@ Page {
           model: ["red", "green", "blue", "orange", "violet"]
           ColorButton {
             color: modelData
-            onClicked: Theme.colors.tintColor = color
+            onClicked: {
+              amplitude.logEvent("Change Tint Color", {"color" : color, "index" : index+1})
+              Theme.colors.tintColor = color
+            }
           }
         }
       }
@@ -190,6 +212,7 @@ Page {
             color: modelData[0]
             referenceColor: Theme.colors.textColor
             onClicked: {
+              amplitude.logEvent("Change Text Color", {"color" : modelData[0], "index" : index})
               Theme.colors.textColor = modelData[0]
               Theme.colors.secondaryTextColor = modelData[1]
               if(index === 0)
@@ -224,6 +247,7 @@ Page {
             color: modelData[0]
             referenceColor: Theme.colors.backgroundColor
             onClicked: {
+              amplitude.logEvent("Change Background Color", {"color" : modelData[0], "index" : index})
               Theme.colors.backgroundColor = modelData[0]
               Theme.listItem.backgroundColor = modelData[0]
               if(modelData[1] === "")
@@ -263,6 +287,7 @@ Page {
           checked: Theme.tabBar.backgroundColor == "#080808"
           updateChecked: false
           onToggled: {
+            amplitude.logEvent(!checked ? "Check Dark Tabs" : "Uncheck Dark Tabs")
             if(!checked) {
               Theme.tabBar.titleColor = Qt.binding(function() { return Theme.isAndroid ? Theme.navigationBar.itemColor : Theme.tintColor })
               Theme.tabBar.titleOffColor = Qt.binding(function() { return Theme.isAndroid ? Qt.darker(Theme.navigationBar.titleColor, 1.5) : "#616161" })

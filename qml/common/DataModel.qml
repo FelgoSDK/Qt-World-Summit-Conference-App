@@ -13,6 +13,12 @@ Item {
   property var tracks: undefined
   property var favorites: undefined
   property var talks: undefined
+  property var contacts: undefined
+  property var ratings: undefined
+
+  property int localAppStarts: 0
+  property bool feedBackSent: false
+
   property string timeZone: "+0200"
 
   property var webStorage: undefined // reference to WebStorage for favorites
@@ -26,33 +32,41 @@ Item {
   onNotificationsEnabledChanged: storage.setValue("notificationsEnabled", notificationsEnabled)
 
   signal loadingFailed()
-  signal favoriteAdded()
-  signal favoriteRemoved()
+  signal favoriteAdded(var talk)
+  signal favoriteRemoved(var talk)
 
   // item for private members
   QtObject {
     id: _
 
     // qtws 2017 api urls
-    property string qtwsApiScheduleUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/api/schedule/all/") //Qt.resolvedUrl("../../assets/data/schedule.json")
-    property string qtwsApiSpeakersUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/api/speakers/all/") //Qt.resolvedUrl("../../assets/data/speakers.json")
+    property string qtwsApiScheduleUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/api/schedule/all/")
+    property string qtwsApiSpeakersUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/api/speakers/all/")
     property string qtwsApiVersionUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/api/version/show/")
+
+    // fallback urls of locally stored version in assets
+    property string fallbackScheduleUrl: Qt.resolvedUrl("../../assets/data/schedule.json")
+    property string fallbackSpeakersUrl: Qt.resolvedUrl("../../assets/data/speakers.json")
+    property string fallbackVersionUrl: Qt.resolvedUrl("../../assets/data/version.json")
+
 
     property int loadingCount: 0
 
     // sendGetRequest - load data from url with success handler
-    function sendGetRequest(url, success) {
+    function sendGetRequest(url, successHandler, errorHandler) {
       var xmlHttpReq = new XMLHttpRequest()
       xmlHttpReq.onreadystatechange = function() {
         if(xmlHttpReq.readyState == xmlHttpReq.DONE && xmlHttpReq.status == 200) {
           var fixedResponse = xmlHttpReq.responseText.replace(new RegExp("&amp;",'g'),"&")
-          success(JSON.parse(fixedResponse))
+          successHandler(JSON.parse(fixedResponse))
           loadingCount--
         }
         else if(xmlHttpReq.readyState == xmlHttpReq.DONE && xmlHttpReq.status != 200) {
           console.error("Error: Failed to load data from "+url+", status = "+xmlHttpReq.status+", response = "+XMLHttpRequest.responseText)
           loadingCount--
-          if(!loading)
+          if(errorHandler !== undefined)
+            errorHandler()
+          else if(!loading)
             dataModel.loadingFailed()
         }
       }
@@ -63,30 +77,42 @@ Item {
     }
 
     // checkAPIVersion - checks Qt WS API version and updates data if necessary
-    function checkAPIVersion() {
-      _.sendGetRequest(_.qtwsApiVersionUrl, function(data) {
-        var currVersion = data.version.substr(2) // e.g. version 1.2345 -> 2345, required because e.g. 1.92 should be lower than 1.715
+    function checkAPIVersion(useLocalData) {
+      var versionUrl = useLocalData ? _.fallbackVersionUrl : _.qtwsApiVersionUrl
+
+      _.sendGetRequest(versionUrl, function(data) {
+        var currVersion = data.version
 
         // load new data when debug build, first call, or newer version available
-        if(system.publishBuild || dataModel.version === undefined || dataModel.version < currVersion) {
+        if(!system.publishBuild || dataModel.version === undefined || dataModel.version !== currVersion) {
           dataModel.version = currVersion
-          _.loadSchedule() // also loads speakers
+          _.loadSchedule(useLocalData) // also loads speakers
         }
+      }, function() {
+        // custom error handler
+        if(dataModel.version === undefined && useLocalData === undefined)
+          checkAPIVersion(true)
+        else if(!loading)
+          dataModel.loadingFailed()
       })
     }
 
     // loadSchedule - load Qt WS schedule from api
-    function loadSchedule() {
-      _.sendGetRequest(_.qtwsApiScheduleUrl, function(data) {
+    function loadSchedule(useLocalData) {
+      var scheduleUrl = useLocalData ? _.fallbackScheduleUrl : _.qtwsApiScheduleUrl
+
+      _.sendGetRequest(scheduleUrl, function(data) {
         _.processScheduleData(data)
         // load speakers after schedule is processed
-        _.loadSpeakers()
+        _.loadSpeakers(useLocalData)
       })
     }
 
     // loadSpeakers - load Qt WS speakers from api
-    function loadSpeakers() {
-      _.sendGetRequest(_.qtwsApiSpeakersUrl, function(data) {
+    function loadSpeakers(useLocalData) {
+      var speakersUrl = useLocalData ? _.fallbackSpeakersUrl : _.qtwsApiSpeakersUrl
+
+      _.sendGetRequest(speakersUrl, function(data) {
         _.processSpeakersData(data)
 
         // when schedule and speakers are loaded, all loading is done -> cache current API version
@@ -109,7 +135,7 @@ Item {
             var duration = event.duration.split(":")
             var end = [parseInt(start[0])+parseInt(duration[0]),
                        parseInt(start[1])+parseInt(duration[1])]
-            if(end[1] > 60) {
+            if(end[1] >= 60) {
               end[1] -= 60
               end[0] += 1
             }
@@ -213,16 +239,21 @@ Item {
     dataModel.speakers = storage.getValue("speakers")
     dataModel.tracks = storage.getValue("tracks")
     dataModel.talks = storage.getValue("talks")
+    dataModel.ratings = storage.getValue("ratings")
     dataModel.notificationsEnabled = storage.getValue("notificationsEnabled") !== undefined ? storage.getValue("notificationsEnabled") : true
 
-    // get favorites from web storage
+    dataModel.localAppStarts = storage.getValue("localAppStarts") || 0
+    dataModel.feedBackSent = storage.getValue("feedBackSent") || false
+
+    // get favorites and contacts from web storage
     dataModel.webStorage = webStorageItem
     dataModel.favorites = webStorage.getValue("favorites")
+    dataModel.contacts = webStorage.getValue("contacts")
 
     dataModel.initialized = true
   }
 
-  // reset DataModel, required when e.g. GameNetwork user changes
+  // reset DataModel
   function reset() {
     dataModel.initialized = false
     dataModel.version = undefined
@@ -230,18 +261,25 @@ Item {
     dataModel.speakers = undefined
     dataModel.tracks = undefined
     dataModel.talks = undefined
+    dataModel.ratings = undefined
     dataModel.favorites = undefined
+    dataModel.contacts = undefined
     dataModel.notificationsEnabled = true
+
+    localAppStarts = 0
+    feedBackSent = false
   }
 
   // clearCache - clears locally stored data
   function clearCache() {
-    // reset dataModel, but keep favorites
+    // reset dataModel, but keep favorites and contacts
     var favorites = dataModel.favorites
+    var contacts = dataModel.contacts
     dataModel.reset()
     dataModel.favorites = favorites
+    dataModel.contacts = contacts
 
-    // clear local storage, favorites are still in webStorage
+    // clear local storage, favorites and contacts are still in webStorage
     storage.clearAll()
     initialized = true // also reloads api data after reset
   }
@@ -253,6 +291,11 @@ Item {
     }
   }
 
+  // loadContact - loads contact from Eventbrite
+  function loadContact(id, successHandler, errorHandler) {
+    _.sendGetRequest(Qt.resolvedUrl("https://www.qtworldsummit.com/api/attendee/show/?id="+id), successHandler, errorHandler)
+  }
+
   // toggleFavorite - add or remove item from favorites
   function toggleFavorite(item) {
     if(dataModel.favorites === undefined)
@@ -260,24 +303,81 @@ Item {
 
     if(dataModel.favorites[item.id]) {
       delete dataModel.favorites[item.id]
-      dataModel.favoriteRemoved()
+      dataModel.favoriteRemoved(item)
     }
     else {
       dataModel.favorites[item.id] = item.id
-      dataModel.favoriteAdded()
+      dataModel.favoriteAdded(item)
     }
 
     // store favorites
     webStorage.setValue("favorites", dataModel.favorites, function(data) {
       // in case setValue merges favorites with data from server, we update the local value
-      dataModel.favorites = webStorage.getValue("favorites")
+      // the merged server data comes as stringified string, thus call json.parse here
+      //dataModel.favorites = webStorage.getValue("favorites") // no need to call getValue() again, we get the value from the callback
+      console.debug("server favorites data:", JSON.stringify(data))
+      // only update the local favorites, if the server has new merged data, in this case conflict is true
+      if(data["conflict"]) {
+        dataModel.favorites = data.mergedData
+      }
+
     })
+    // call the changed here, to schedule the notifications with the new local data
     favoritesChanged()
   }
 
   // isFavorite - check if item is favorited
   function isFavorite(id) {
     return dataModel.favorites !== undefined && dataModel.favorites[id] !== undefined
+  }
+
+  // addContact - store contact from barcode scanner
+  function addContact(id, contact) {
+    if(dataModel.contacts === undefined)
+      dataModel.contacts = { }
+
+    // store contact
+    dataModel.contacts[id] = contact
+    webStorage.setValue("contacts", dataModel.contacts, function(data) {
+      // in case setValue merges contacts with data from server, we update the local value
+      // only update the local favorites, if the server has new merged data, in this case conflict is true
+      if(data["conflict"]) {
+        dataModel.contacts = data.mergedData
+      }
+    })
+
+    // signal that contacts changed
+    dataModel.contactsChanged()
+  }
+
+  // removeContact - remove contact from list
+  function removeContact(id) {
+    if(dataModel.contacts !== undefined && dataModel.contacts[id]) {
+      delete dataModel.contacts[id]
+
+      // store contacts
+      webStorage.setValue("contacts", dataModel.contacts, function(data) {
+        // in case setValue merges contacts with data from server, we update the local value
+        // only update the local favorites, if the server has new merged data, in this case conflict is true
+        if(data["conflict"]) {
+          dataModel.contacts = data.mergedData
+        }
+      })
+
+      // signal that contacts changed
+      dataModel.contactsChanged()
+    }
+  }
+
+  function getRating(id) {
+    if(!ratings || !(id in ratings)) return -1
+    else return ratings[id]
+  }
+
+  function storeRating(id, rating) {
+    if(!ratings) ratings = {}
+    ratings[id] = rating
+    storage.setValue("ratings", ratings)
   }
 
   // search - get talks with certain keyword in title or description
@@ -381,5 +481,23 @@ Item {
     if (a.title > b.title)
       return 1;
     return 0;
+  }
+
+  // increase local app start counter
+  function increaseLocalAppStarts() {
+    if(!initialized)
+      return
+
+    localAppStarts++
+    storage.setValue("localAppStarts",localAppStarts)
+  }
+
+  // store whether feedback was sent
+  function setFeedBackSent(value) {
+    if(!initialized)
+      return
+
+    feedBackSent = !!value  // ensures boolean type
+    storage.setValue("feedBackSent", feedBackSent)
   }
 }

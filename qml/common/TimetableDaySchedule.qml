@@ -16,6 +16,8 @@ Item {
 
   property bool searchAllowed: true
 
+  property alias listView: listView
+
   signal searchAccepted(string text)
 
   Component.onCompleted: {
@@ -23,6 +25,7 @@ Item {
     listView.positionViewAtEnd()
     listView.positionViewAtBeginning()
     updater.updateJumpToNow()
+    jumpToNow() // scroll to talk of current time initially
   }
 
   // private members
@@ -38,6 +41,7 @@ Item {
     y: show ? dp(5) : -height
     opacity: show ? 1 : 0
     text: "now"
+    visible: !Theme.isIos
 
     // whether jump to now button should be visible, will be set while scrolling through view
     property bool show: false

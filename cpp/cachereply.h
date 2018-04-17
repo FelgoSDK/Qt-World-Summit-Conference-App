@@ -11,7 +11,7 @@ public:
   CacheReply(QIODevice *cacheDev, const QNetworkRequest & req,
              QNetworkAccessManager::Operation op,
              QNetworkCacheMetaData meta, QObject *parent = 0);
-
+  ~CacheReply();
 
   void abort() Q_DECL_OVERRIDE;
   qint64 bytesAvailable() const Q_DECL_OVERRIDE;

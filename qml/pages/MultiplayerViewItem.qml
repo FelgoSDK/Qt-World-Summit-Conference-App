@@ -13,6 +13,12 @@ Item {
   // make accessible for GameNetwork component
   property alias mpView: multiplayerView
 
+  // navigationStack for pushing sup-pages as new item (may be used in custom mp view)
+  property var navigationStack: null
+
+  // page that currently holds the view
+  property var parentPage: null
+
   VPlayMultiplayerView {
     id: multiplayerView
     anchors.fill: parent //.gameWindowAnchorItem
@@ -29,19 +35,23 @@ Item {
 
   // overwrite previous back icon with drawer / ios style back icon
   Rectangle {
+    color: "white"
     width: 32 + dp(8)
     height: dp(52)
     visible: multiplayerView.state === "friends" || multiplayerView.state === "inbox"
 
     ButtonBarItem {
       id: btnBarItem
-      visible: page.parent && page.parent.splitViewActive !== undefined ? !page.parent.splitViewActive : true
+      visible: navigationStack && navigationStack.splitViewActive ? navigationStack.depth > 2 : true
       width: icon.width
       height: icon.height
       y: (parent.height - height) * 0.5 + dp(2)
       x: (parent.width - width) * 0.5 + dp(4)
-      mouseArea.backgroundColor: setAlpha(Theme.tintColor, 0.1)
-      mouseArea.fillColor: setAlpha(Theme.tintColor, 0.1)
+      //mouseArea.backgroundColor: Theme.navigationBar.backgroundColor
+      //mouseArea.fillColor: Theme.navigationBar.backgroundColor
+      mouseArea.anchors.fill: undefined
+      mouseArea.width: width * 5
+      mouseArea.height: height
       onClicked: page.backClicked()
 
       Icon {

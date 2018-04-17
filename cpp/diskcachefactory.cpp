@@ -22,5 +22,7 @@ QNetworkAccessManager *DiskCacheFactory::create(QObject *parent) {
 
   qDebug() << "installing network cache of" << (mCacheSize / 1024) << "KB in folder" << cacheFolder;
 
+  ((CachingNetworkAccessManager *)nam)->clearIgnoredUrlsFromCache();
+
   return nam;
 }

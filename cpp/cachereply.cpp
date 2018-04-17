@@ -46,3 +46,11 @@ qint64 CacheReply::size() const
 qint64 CacheReply::readData(char *data, qint64 maxlen)  {
   return mCacheDev->read(data, maxlen);
 }
+
+CacheReply::~CacheReply() {
+  close();
+  if (mCacheDev) {
+    mCacheDev->close();
+    delete mCacheDev;
+  }
+}
