@@ -82,7 +82,7 @@ Rectangle {
     defaultPerPageCount: 100 // increase to show more users in leaderboard, default would be 30
 
     // this saves the get_user_scores request at app startup if the user already logged in before. it can be synced manually in the profile view
-    // autoLoadUserScoresAndAchievemenstWhenAuthenticated: false // Note: activate this property after it is public with next V-Play Update
+    autoLoadUserScoresAndAchievemenstWhenAuthenticated: false
 
     //clearAllUserDataAtStartup: system.desktopPlatform // this can be enabled during development to simulate a first-time app start
     clearOfflineSendingQueueAtStartup: true // clear any stored requests in the offline queue at app start, to avoid starting errors
