@@ -1,28 +1,33 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import "../common"
 
 ListPage {
   id: speakersPage
 
-  property var speakersModel: DataModel.speakers !== undefined ? DataModel.speakers : {}
+  property var speakersModel: dataModel.speakers !== undefined ? dataModel.speakers : {}
 
   title: "Speakers"
 
-  model: prepareSpeakers(speakersModel)
+  model: JsonListModel {
+    id: listModel
+    source: prepareSpeakers(speakersModel)
+    keyField: "id"
+    fields: [ "id","first_name","last_name","abstract","avatar","talks","firstLetter" ]
+  }
   section.property: "firstLetter"
   section.delegate: SimpleSection {
     style.compactStyle: Theme.isIos
   }
 
   delegate: SpeakerRow {
-    speaker: modelData
+    speaker: listModel.get(index)
     small: true
     onClicked: {
       if(Theme.isAndroid)
-        speakersPage.navigationStack.popAllExceptFirstAndPush(Qt.resolvedUrl("SpeakerDetailPage.qml"), { speakerID: modelData.id })
+        speakersPage.navigationStack.popAllExceptFirstAndPush(Qt.resolvedUrl("SpeakerDetailPage.qml"), { speakerID: speaker.id })
       else
-        speakersPage.navigationStack.push(Qt.resolvedUrl("SpeakerDetailPage.qml"), { speakerID: modelData.id })
+        speakersPage.navigationStack.push(Qt.resolvedUrl("SpeakerDetailPage.qml"), { speakerID: speaker.id })
     }
   }
 
@@ -41,6 +46,7 @@ ListPage {
       var speakerID = Object.keys(speakers)[i];
       var speaker = speakers[parseInt(speakerID)]
       speaker["firstLetter"] = speaker["last_name"].charAt(0).toUpperCase()
+      console.log("\nSPEAKERS: "+JSON.stringify(speaker))
       model.push(speaker)
     }
     model.sort(compareLastName);

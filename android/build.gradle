@@ -10,8 +10,8 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter()
         maven { url 'https://maven.google.com' }
+        jcenter()
         maven { url 'https://sdk.v-play.net/maven/' }
     }
 }
@@ -20,10 +20,10 @@ apply plugin: 'com.android.application'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'net.vplay.plugins:plugin-onesignal:2.+' // one signal plugin
-    compile 'net.vplay.plugins:plugin-notification:2.+' // local notifications
-    compile 'net.vplay.plugins:plugin-facebook:2.+' // facebook plugin
-    compile 'net.vplay.plugins:plugin-amplitude:2.+' // amplitude plugin
+    compile 'net.vplay.plugins:plugin-onesignal:3.+' // one signal plugin
+    compile 'net.vplay.plugins:plugin-notification:3.+' // local notifications
+    compile 'net.vplay.plugins:plugin-facebook:3.+' // facebook plugin
+    compile 'net.vplay.plugins:plugin-amplitude:3.+' // amplitude plugin
 }
 
 android {

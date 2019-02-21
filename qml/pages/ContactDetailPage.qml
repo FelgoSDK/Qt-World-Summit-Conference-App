@@ -1,10 +1,9 @@
-import VPlayApps 1.0
 import QtQuick 2.0
 import QtQuick.Layouts 1.1
-import VPlay 2.0
+import Felgo 3.0
 import "../common"
 
-Page {
+FlickablePage {
   id: page
   title: "Contact Info"
 
@@ -12,227 +11,218 @@ Page {
   property var contact
   property var dataTextSize: sp(12)
 
-  ScrollIndicator {
-    flickable: flick
-    z: 1
-  }
+  flickable.contentWidth: width
+  flickable.contentHeight: contentCol.height
 
-  AppFlickable {
-    id: flick
-    anchors.fill: parent
-    contentWidth: width
-    contentHeight: contentCol.height
+  GridLayout {
+    id: contentCol
+    x: dp(Theme.navigationBar.defaultBarItemPadding)
+    Layout.preferredWidth: implicitWidth
+    Layout.maximumWidth: parent.width - dp(Theme.navigationBar.defaultBarItemPadding)
+    columns: 2
+    rowSpacing: columnSpacing * 0.5
+    columnSpacing: dp(Theme.navigationBar.defaultBarItemPadding)
+    anchors.horizontalCenter: parent.horizontalCenter
 
-    GridLayout {
-      id: contentCol
-      x: dp(Theme.navigationBar.defaultBarItemPadding)
-      Layout.preferredWidth: implicitWidth
-      Layout.maximumWidth: parent.width - dp(Theme.navigationBar.defaultBarItemPadding)
-      columns: 2
-      rowSpacing: columnSpacing * 0.5
-      columnSpacing: dp(Theme.navigationBar.defaultBarItemPadding)
-      anchors.horizontalCenter: parent.horizontalCenter
-
-      Item {
-        Layout.columnSpan: 2
-        Layout.fillWidth: true
-        height: parent.rowSpacing
-      }
-
-      AppText {
-        text: "Name:"
-        visible: appTextName.visible
-        font.pixelSize: page.dataTextSize
-        font.bold: true
-        font.weight: Font.Bold
-        font.family: Theme.boldFont.name
-      }
-
-      AppText {
-        id: appTextName
-        Layout.fillWidth: true
-        text: contact && contact.name ? contact.name : ""
-        wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
-        visible: text !== ""
-        font.pixelSize: page.dataTextSize
-      }
-
-      AppText {
-        text: "Email:"
-        visible: appTextEmail.visible
-        font.pixelSize: page.dataTextSize
-        font.bold: true
-        font.weight: Font.Bold
-        font.family: Theme.boldFont.name
-      }
-
-      AppText {
-        id: appTextEmail
-        Layout.fillWidth: true
-        text: contact && contact.email ? contact.email : ""
-        wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
-        visible: text !== ""
-        font.pixelSize: page.dataTextSize
-      }
-
-      AppText {
-        text: "Phone:"
-        visible: appTextPhone.visible
-        font.pixelSize: page.dataTextSize
-        font.bold: true
-        font.weight: Font.Bold
-        font.family: Theme.boldFont.name
-      }
-
-      AppText {
-        id: appTextPhone
-        Layout.fillWidth: true
-        text: contact && contact.work_phone ? contact.work_phone : ""
-        wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
-        visible: text !== "" && text !== "0"
-        font.pixelSize: page.dataTextSize
-      }
-
-      AppText {
-        text: "Company:"
-        visible: appTextCompany.visible
-        font.pixelSize: page.dataTextSize
-        font.bold: true
-        font.weight: Font.Bold
-        font.family: Theme.boldFont.name
-      }
-
-      AppText {
-        id: appTextCompany
-        Layout.fillWidth: true
-        text: contact && contact.company ? contact.company : ""
-        wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
-        visible: text !== ""
-        font.pixelSize: page.dataTextSize
-      }
-
-      AppText {
-        text: "Position:"
-        visible: appTextJobTitle.visible
-        font.pixelSize: page.dataTextSize
-        font.bold: true
-        font.weight: Font.Bold
-        font.family: Theme.boldFont.name
-      }
-
-      AppText {
-        id: appTextJobTitle
-        Layout.fillWidth: true
-        text: contact && contact.job_title ? contact.job_title : ""
-        wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
-        visible: text !== ""
-        font.pixelSize: page.dataTextSize
-      }
-
-      AppText {
-        text: "Address:"
-        visible: appTextAddress.visible
-        font.pixelSize: page.dataTextSize
-        font.bold: true
-        font.weight: Font.Bold
-        font.family: Theme.boldFont.name
-      }
-
-      AppText {
-        id: appTextAddress
-        Layout.fillWidth: true
-        text: contact && contact.address ? contact.address : ""
-        wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
-        visible: text !== ""
-        font.pixelSize: page.dataTextSize
-      }
-
-      AppText {
-        text: "City:"
-        visible: appTextCity.visible
-        font.pixelSize: page.dataTextSize
-        font.bold: true
-        font.weight: Font.Bold
-        font.family: Theme.boldFont.name
-      }
-
-      AppText {
-        id: appTextCity
-        Layout.fillWidth: true
-        text: contact && contact.city ? contact.city : ""
-        wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
-        visible: text !== ""
-        font.pixelSize: page.dataTextSize
-      }
-
-      AppText {
-        text: "Province:"
-        visible: appTextProvince.visible
-        font.pixelSize: page.dataTextSize
-        font.bold: true
-        font.weight: Font.Bold
-        font.family: Theme.boldFont.name
-      }
-
-      AppText {
-        id: appTextProvince
-        Layout.fillWidth: true
-        text: contact && contact.province ? contact.province : ""
-        wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
-        visible: text !== ""
-        font.pixelSize: page.dataTextSize
-      }
-
-      AppText {
-        text: "Country:"
-        visible: appTextCountry.visible
-        font.pixelSize: page.dataTextSize
-        font.bold: true
-        font.weight: Font.Bold
-        font.family: Theme.boldFont.name
-      }
-
-      AppText {
-        id: appTextCountry
-        Layout.fillWidth: true
-        text: contact && contact.country ? contact.country : ""
-        wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
-        visible: text !== ""
-        font.pixelSize: page.dataTextSize
-      }
-
-      Item {
-        Layout.fillWidth: true
-        Layout.columnSpan: 2
-        width: parent.width
-        height: parent.rowSpacing
-      }
-
-      AppButton {
-        text: "Store Contact"
-        Layout.columnSpan: 2
-        Layout.fillWidth: true
-        flat: false
-        anchors.horizontalCenter: parent.horizontalCenter
-        onClicked: storeContact()
-      }
-
-      AppButton {
-        text: "Remove from Contact List"
-        Layout.columnSpan: 2
-        Layout.fillWidth: true
-        flat: true
-        anchors.horizontalCenter: parent.horizontalCenter
-        onClicked: NativeDialog.confirm("Confirm Removal", "Are you sure want to remove this contact?", function(accept) {
-          if(accept) {
-            DataModel.removeContact(page.contactId)
-            navigationStack.pop()
-          }
-        })
-        verticalMargin: 0
-      }
-
+    Item {
+      Layout.columnSpan: 2
+      Layout.fillWidth: true
+      height: parent.rowSpacing
     }
+
+    AppText {
+      text: "Name:"
+      visible: appTextName.visible
+      font.pixelSize: page.dataTextSize
+      font.bold: true
+      font.weight: Font.Bold
+      font.family: Theme.boldFont.name
+    }
+
+    AppText {
+      id: appTextName
+      Layout.fillWidth: true
+      text: contact && contact.name ? contact.name : ""
+      wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
+      visible: text !== ""
+      font.pixelSize: page.dataTextSize
+    }
+
+    AppText {
+      text: "Email:"
+      visible: appTextEmail.visible
+      font.pixelSize: page.dataTextSize
+      font.bold: true
+      font.weight: Font.Bold
+      font.family: Theme.boldFont.name
+    }
+
+    AppText {
+      id: appTextEmail
+      Layout.fillWidth: true
+      text: contact && contact.email ? contact.email : ""
+      wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
+      visible: text !== ""
+      font.pixelSize: page.dataTextSize
+    }
+
+    AppText {
+      text: "Phone:"
+      visible: appTextPhone.visible
+      font.pixelSize: page.dataTextSize
+      font.bold: true
+      font.weight: Font.Bold
+      font.family: Theme.boldFont.name
+    }
+
+    AppText {
+      id: appTextPhone
+      Layout.fillWidth: true
+      text: contact && contact.work_phone ? contact.work_phone : ""
+      wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
+      visible: text !== "" && text !== "0"
+      font.pixelSize: page.dataTextSize
+    }
+
+    AppText {
+      text: "Company:"
+      visible: appTextCompany.visible
+      font.pixelSize: page.dataTextSize
+      font.bold: true
+      font.weight: Font.Bold
+      font.family: Theme.boldFont.name
+    }
+
+    AppText {
+      id: appTextCompany
+      Layout.fillWidth: true
+      text: contact && contact.company ? contact.company : ""
+      wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
+      visible: text !== ""
+      font.pixelSize: page.dataTextSize
+    }
+
+    AppText {
+      text: "Position:"
+      visible: appTextJobTitle.visible
+      font.pixelSize: page.dataTextSize
+      font.bold: true
+      font.weight: Font.Bold
+      font.family: Theme.boldFont.name
+    }
+
+    AppText {
+      id: appTextJobTitle
+      Layout.fillWidth: true
+      text: contact && contact.job_title ? contact.job_title : ""
+      wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
+      visible: text !== ""
+      font.pixelSize: page.dataTextSize
+    }
+
+    AppText {
+      text: "Address:"
+      visible: appTextAddress.visible
+      font.pixelSize: page.dataTextSize
+      font.bold: true
+      font.weight: Font.Bold
+      font.family: Theme.boldFont.name
+    }
+
+    AppText {
+      id: appTextAddress
+      Layout.fillWidth: true
+      text: contact && contact.address ? contact.address : ""
+      wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
+      visible: text !== ""
+      font.pixelSize: page.dataTextSize
+    }
+
+    AppText {
+      text: "City:"
+      visible: appTextCity.visible
+      font.pixelSize: page.dataTextSize
+      font.bold: true
+      font.weight: Font.Bold
+      font.family: Theme.boldFont.name
+    }
+
+    AppText {
+      id: appTextCity
+      Layout.fillWidth: true
+      text: contact && contact.city ? contact.city : ""
+      wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
+      visible: text !== ""
+      font.pixelSize: page.dataTextSize
+    }
+
+    AppText {
+      text: "Province:"
+      visible: appTextProvince.visible
+      font.pixelSize: page.dataTextSize
+      font.bold: true
+      font.weight: Font.Bold
+      font.family: Theme.boldFont.name
+    }
+
+    AppText {
+      id: appTextProvince
+      Layout.fillWidth: true
+      text: contact && contact.province ? contact.province : ""
+      wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
+      visible: text !== ""
+      font.pixelSize: page.dataTextSize
+    }
+
+    AppText {
+      text: "Country:"
+      visible: appTextCountry.visible
+      font.pixelSize: page.dataTextSize
+      font.bold: true
+      font.weight: Font.Bold
+      font.family: Theme.boldFont.name
+    }
+
+    AppText {
+      id: appTextCountry
+      Layout.fillWidth: true
+      text: contact && contact.country ? contact.country : ""
+      wrapMode: AppText.WrapAtWordBoundaryOrAnywhere
+      visible: text !== ""
+      font.pixelSize: page.dataTextSize
+    }
+
+    Item {
+      Layout.fillWidth: true
+      Layout.columnSpan: 2
+      width: parent.width
+      height: parent.rowSpacing
+    }
+
+    AppButton {
+      text: "Store Contact"
+      Layout.columnSpan: 2
+      Layout.fillWidth: true
+      flat: false
+      anchors.horizontalCenter: parent.horizontalCenter
+      onClicked: storeContact()
+    }
+
+    AppButton {
+      text: "Remove from Contact List"
+      Layout.columnSpan: 2
+      Layout.fillWidth: true
+      flat: true
+      anchors.horizontalCenter: parent.horizontalCenter
+      onClicked: NativeDialog.confirm("Confirm Removal", "Are you sure want to remove this contact?", function(accept) {
+        if(accept) {
+          logic.removeContact(page.contactId)
+          navigationStack.pop()
+        }
+      })
+      verticalMargin: 0
+    }
+
   }
 
   function storeContact() {

@@ -1,4 +1,4 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import QtQuick.Layouts 1.1
 import "../common"
@@ -57,7 +57,7 @@ Item {
 
     Repeater {
       id: repeater
-      model: modelData.tracks
+      model: item.tracks
       Rectangle {
         id: trackIndicator
         width: parent.width
@@ -106,8 +106,8 @@ Item {
         Layout.alignment: Qt.AlignCenter
         Layout.rowSpan: 2
 
-        property var speakerId: item.persons.length > 0 ? item.persons[0]["id"] : undefined
-        source: speakerId !== undefined && DataModel.speakers && DataModel.speakers[speakerId] ? DataModel.speakers[speakerId].avatar : ""
+        property var speakerId: item.persons && item.persons.length > 0 ? item.persons[0]["id"] : undefined
+        source: speakerId !== undefined && dataModel.speakers && dataModel.speakers[speakerId] ? dataModel.speakers[speakerId].avatar : ""
       } // SpeakerImage
 
       // title text
@@ -129,7 +129,7 @@ Item {
           color: scheduleListItem.style.textColor
           font.family: Theme.normalFont.name
           font.pixelSize: sp(scheduleListItem.style.fontSizeText)
-          text: item.title
+          text: item && item.title || ""
 
           // calculate additional margin needed to align with title in navigation bar
           property real titleAlignmentMargin:
@@ -153,15 +153,15 @@ Item {
         icon: isFavorite ? IconType.star : IconType.staro
         color: isFavorite || favoriteArea.pressed ? Theme.tintColor : Theme.secondaryTextColor
 
-        property bool isFavorite: item && item.id ? DataModel.isFavorite(item.id) : false
+        property bool isFavorite: item && item.id ? dataModel.isFavorite(item.id) : false
         property bool updateWhenVisible: false
 
         // update UI when favorites change while visible
         Connections {
-          target: DataModel
+          target: dataModel
           onFavoritesChanged: {
             if(visible)
-              favoriteIcon.isFavorite = modelData && modelData.id ? DataModel.isFavorite(modelData.id) : false
+              favoriteIcon.isFavorite = item && item.id ? dataModel.isFavorite(item.id) : false
             else
               favoriteIcon.updateWhenVisible = true
           }
@@ -170,7 +170,7 @@ Item {
         // update UI when favorites changed while invisible
         onVisibleChanged: {
           if(visible && updateWhenVisible) {
-            favoriteIcon.isFavorite = modelData && modelData.id ? DataModel.isFavorite(modelData.id) : false
+            favoriteIcon.isFavorite = item && item.id ? dataModel.isFavorite(item.id) : false
             updateWhenVisible = false
           }
         }
@@ -201,7 +201,7 @@ Item {
           font.family: Theme.normalFont.name
           font.pixelSize: sp(scheduleListItem.style.fontSizeDetailText)
           maximumLineCount: 1
-          text: modelData.start+" - "+modelData.end
+          text: item.start+" - "+item.end
 
           x: textLabel.x
           width: parent.width - x
@@ -215,7 +215,7 @@ Item {
         Layout.minimumWidth: implicitWidth
         Layout.preferredHeight: implicitHeight
         Layout.columnSpan: 2
-        text: modelData.room && modelData.room !== "Qt World Summit 2017" ? modelData.room : ""
+        text: item.room && item.room !== "Qt World Summit 2017" ? item.room : ""
         font.pixelSize: sp(scheduleListItem.style.fontSizeDetailText)
         font.italic: true
         wrapMode: Text.NoWrap
@@ -249,6 +249,6 @@ Item {
 
   // add or remove item from favorites
   function toggleFavorite() {
-    DataModel.toggleFavorite(item)
+    logic.toggleFavorite(item)
   }
 }

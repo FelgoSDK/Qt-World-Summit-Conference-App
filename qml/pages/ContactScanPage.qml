@@ -1,4 +1,4 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import QtMultimedia 5.5
 import QZXing 2.3 // barcode scanning
@@ -29,7 +29,7 @@ Page {
     captureText.visible = false
     captureZone.color = "green"
 
-    DataModel.loadContact(tag, function(data) {
+    logic.loadContact(tag, function(data) {
       // success handler
       page.busy = false
 
@@ -41,10 +41,10 @@ Page {
       amplitude.logEvent("Card Scan Successful",{"tag" : tag, "data": data, "name": data.name})
 
       // check if contact already exists
-      var contactAlreadyExists = DataModel.contacts && DataModel.contacts[tag]
+      var contactAlreadyExists = dataModel.contacts && dataModel.contacts[tag]
 
       // add/overwrite contact in storage
-      DataModel.addContact(tag, data)
+      logic.addContact(tag, data)
 
       // show contact, also show dialog if existing contact was updated
       if(!contactAlreadyExists) {

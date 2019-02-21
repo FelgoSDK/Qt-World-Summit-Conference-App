@@ -1,4 +1,4 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import "."
 
@@ -14,8 +14,8 @@ Item {
 
   Component.onCompleted: {
     checkTimer.start()
-    // the DataModel will return -1 if nothing is stored, or 1-5 if a stored rating is successfully loaded
-    var rating = DataModel.getRating(talk.id)
+    // the model will return -1 if nothing is stored, or 1-5 if a stored rating is successfully loaded
+    var rating = dataModel.getRating(talk.id)
     isRated = rating > -1
     stars = rating
   }
@@ -114,7 +114,7 @@ Item {
     okButtonWrapper.height = 0
     isRated = true
     amplitude.logEvent("Rate Talk", {"title" : talk.title, "talkId" : talk.id, "rating" : stars})
-    DataModel.storeRating(talk.id, stars)
+    logic.storeRating(talk.id, stars)
     if(gameNetwork.userScoresInitiallySynced)
       gameNetwork.reportRelativeScore(1)
     else
@@ -123,7 +123,7 @@ Item {
 
   function checkIfPast() {
     var nowTime = new Date().getTime()
-    var utcDateStr = talk.day+"T"+talk.end+".000"+DataModel.timeZone
+    var utcDateStr = talk.day+"T"+talk.end+".000"+dataModel.timeZone
     var talkEndTime = new Date(utcDateStr).getTime() - (15 * 60 * 1000)
 
     if(nowTime > talkEndTime) {

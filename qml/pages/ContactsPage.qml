@@ -1,4 +1,4 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import QtMultimedia 5.5
 import QZXing 2.3 // barcode scanning
@@ -13,8 +13,13 @@ ListPage {
     onClicked: sendContacts()
   }
 
-  model: prepareContactsModel(DataModel.contacts)
+  model: JsonListModel {
+    id: listModel
+    source: prepareContactsModel(dataModel.contacts)
+  }
+
   delegate: SimpleRow {
+   property var modelData: listModel.get(index)
    text: modelData.name
    detailText: modelData.pretty_scan_timestamp
    onSelected: page.navigationStack.push(Qt.resolvedUrl("ContactDetailPage.qml"),{ contactId: modelData["scan_tag"], contact: modelData })
@@ -69,8 +74,8 @@ ListPage {
   // prepareContactsModel - sort contacts by scan time
   function prepareContactsModel(contacts) {
 
-    if(DataModel.contacts && DataModel.contacts.length > 0)
-      DataModel.webStorage.setValue("contacts",{})
+    if(dataModel.contacts && dataModel.contacts.length > 0)
+      logic.clearContacts()
 
     if(!contacts)
       return []
@@ -94,12 +99,12 @@ ListPage {
 
   // sencContacts - create string CSV of contacts and send via email
   function sendContacts() {
-    if(!DataModel.contacts)
+    if(!dataModel.contacts)
       return
 
     var csv = ""
-    for(var tag in DataModel.contacts) {
-      var contact = DataModel.contacts[tag]
+    for(var tag in dataModel.contacts) {
+      var contact = dataModel.contacts[tag]
       var colSeparator = ";"
       var rowSeparator = "\n"
 

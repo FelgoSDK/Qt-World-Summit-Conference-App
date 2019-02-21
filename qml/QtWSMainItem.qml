@@ -1,7 +1,5 @@
-import VPlayApps 1.0
 import QtQuick 2.0
-import VPlay 2.0 // for game network
-import VPlayPlugins 1.0 // for NotificationManager
+import Felgo 3.0
 import QtGraphicalEffects 1.0
 import "pages"
 import "common"
@@ -30,7 +28,7 @@ Item {
 
   // handle data loading failed
   Connections {
-    target: DataModel
+    target: dataModel
     onLoadingFailed: NativeDialog.confirm("Failed to update conference data, please try again later.")
     onFavoriteAdded: {
       console.debug("favorite added")
@@ -85,6 +83,26 @@ Item {
     }
   }
 
+  Connections {
+    target: notificationManager
+    // display alert for upcoming sessions
+    onNotificationFired: {
+      if(notificationId >= 0) {
+        // session reminder
+        if(dataModel.loaded && dataModel.talks && dataModel.talks[notificationId]) {
+          var talk = dataModel.talks[notificationId]
+          var text = talk["title"]+" starts "+talk.start+" at "+talk["room"]+"."
+          var title = "Session Reminder"
+          NativeDialog.confirm(title, text, function(){}, false)
+        }
+      }
+      else {
+        // default notification
+        NativeDialog.confirm("The conference starts soon!", "Thanks for using our app, we wish you a great Qt World Summit 2017!", function(){}, false)
+      }
+    }
+  }
+
 
   // scheduleNotificationsForFavorites
   function scheduleNotificationsForFavorites() {
@@ -95,24 +113,28 @@ Item {
       return
     }
 
+    // if used within Demo Launcher app project, we do not use notifications
+    if(typeof notificationManager === "undefined")
+      return
+
     console.debug("scheduling notifications now")
 
     // TODO: only re-schedule, if the current nofications changed. this may be a lengthy process
 
     notificationManager.cancelAllNotifications()
-    if(!DataModel.notificationsEnabled || !DataModel.favorites || !DataModel.talks)
+    if(!dataModel.notificationsEnabled || !dataModel.favorites || !dataModel.talks)
       return
 
-    for(var idx in DataModel.favorites) {
-      var talkId = DataModel.favorites[idx]
+    for(var idx in dataModel.favorites) {
+      var talkId = dataModel.favorites[idx]
       scheduleNotificationForTalk(talkId)
     }
 
     // add notification before world summit starts!
     var nowTime = new Date().getTime()
-    var eveningBeforeConferenceTime = new Date("2017-10-09T21:00.000"+DataModel.timeZone).getTime()
+    var eveningBeforeConferenceTime = new Date("2017-10-09T21:00.000"+dataModel.timeZone).getTime()
     if(nowTime < eveningBeforeConferenceTime) {
-      var text = "V-Play wishes all the best for Qt World Summit 2017!"
+      var text = "Felgo wishes all the best for Qt World Summit 2017!"
       var notification = {
         notificationId: -1,
         message: text,
@@ -124,12 +146,12 @@ Item {
 
   // scheduleNotificationForTalk
   function scheduleNotificationForTalk(talkId) {
-    if(DataModel.loaded && DataModel.talks && DataModel.talks[talkId]) {
-      var talk = DataModel.talks[talkId]
+    if(dataModel.loaded && dataModel.talks && dataModel.talks[talkId]) {
+      var talk = dataModel.talks[talkId]
       var text = talk["title"]+" starts "+talk.start+" at "+talk["room"]+"."
 
       var nowTime = new Date().getTime()
-      var utcDateStr = talk.day+"T"+talk.start+".000"+DataModel.timeZone
+      var utcDateStr = talk.day+"T"+talk.start+".000"+dataModel.timeZone
       var notificationTime = new Date(utcDateStr).getTime()
       notificationTime = notificationTime - 10 * 60 * 1000 // 10 minutes before
 
@@ -180,8 +202,8 @@ Item {
     // automatically load data if not loaded and schedule/favorites page is opened
     onCurrentIndexChanged: {
       if(currentIndex > 0 && currentIndex < 3) {
-        if(!DataModel.loaded && isOnline)
-          DataModel.loadData()
+        if(!dataModel.loaded && isOnline)
+          logic.loadData()
       }
     }
     onCurrentNavigationItemChanged: {
@@ -267,11 +289,11 @@ Item {
             height: parent.height
             icon: IconType.home
             color: !parent.selected ? Theme.textColor  : Theme.tintColor
-            visible: !vplayIcon.visible
+            visible: !felgoIcon.visible
           }
 
           Image {
-            id: vplayIcon
+            id: felgoIcon
             height: parent.height
             anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
             fillMode: Image.PreserveAspectFit
@@ -404,7 +426,7 @@ Item {
     } // settings
 
     NavigationItem {
-      title: "About V-Play"
+      title: "About Felgo"
       showItem: Theme.isAndroid
       iconComponent: Item {
         height: parent.height
@@ -418,22 +440,22 @@ Item {
           height: parent.height
           icon: IconType.home
           color: !parent.selected ? Theme.textColor  : Theme.tintColor
-          visible: !vplayIcon.visible
+          visible: !felgoIcon.visible
         }
 
         Image {
-          id: vplayIcon
+          id: felgoIcon
           height: parent.height
           anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
           fillMode: Image.PreserveAspectFit
-          source: !parent.selected ? "../assets/VPlay_icon_nav_off.png" : "../assets/VPlay_icon_nav.png"
+          source: !parent.selected ? "../assets/Felgo_icon_nav_off.png" : "../assets/Felgo_icon_nav.png"
           visible: Theme.isIos || Theme.backgroundColor.r == 1 && Theme.backgroundColor.g == 1 && Theme.backgroundColor.b == 1
         }
       }
 
-      sourceComponent: aboutVPlayComponent
+      sourceComponent: aboutFelgoComponent
       asynchronous: true
-    } // About V-Play
+    } // About Felgo
   } // nav
 
   Component {
@@ -519,9 +541,9 @@ Item {
   }
 
   Component {
-    id: aboutVPlayComponent
+    id: aboutFelgoComponent
     NavigationStack {
-      Component.onCompleted: push(Qt.resolvedUrl("pages/AboutVPlayPage.qml"))
+      Component.onCompleted: push(Qt.resolvedUrl("pages/AboutFelgoPage.qml"))
     }
   }
 
@@ -559,7 +581,7 @@ Item {
 
       // set active Android NavigationItem in drawer
       if(Theme.isAndroid) {
-        if(activeTitle === "About V-Play")
+        if(activeTitle === "About Felgo")
           navigation.currentIndex = 12
         else if(activeTitle === "Settings")
           navigation.currentIndex = 11
@@ -589,8 +611,8 @@ Item {
           target = socialView.profilePage
         else if(activeTitle === "Business Meet")
           target = socialView.businessMeetPage
-        else if(activeTitle === "About V-Play")
-          target = Qt.resolvedUrl("pages/AboutVPlayPage.qml")
+        else if(activeTitle === "About Felgo")
+          target = Qt.resolvedUrl("pages/AboutFelgoPage.qml")
         else if(activeTitle === "Settings")
           target = Qt.resolvedUrl("pages/SettingsPage.qml")
         else if(activeTitle === "Contacts")
@@ -623,7 +645,7 @@ Item {
 
   // check app starts and show feedback dialog if required
   function checkFeedbackDialog() {
-    if(DataModel.localAppStarts > 5 && !DataModel.feedBackSent) {
+    if(dataModel.localAppStarts > 5 && !dataModel.feedBackSent) {
       likeDialog.open()
     }
   }

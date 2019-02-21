@@ -1,4 +1,4 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import "../common"
 
@@ -6,6 +6,7 @@ ListPage {
   id: morePage
   title: "More"
 
+  // Note: no need to e.g. use JsonListModel here, this model menu items won't change while using the app
   model: [
     { text: "Business Meet", section: "Social", page: socialViewItem.businessMeetPage },
     { text: "Your Profile", section: "Social", page: socialViewItem.profilePage },
@@ -15,7 +16,7 @@ ListPage {
     { text: "Venue", section: "General", page: Qt.resolvedUrl("VenuePage.qml") },
     { text: "QR Contacts", section: "General", page: Qt.resolvedUrl("ContactsPage.qml")},
     { text: "Settings", section: "General", page: Qt.resolvedUrl("SettingsPage.qml") },
-    { text: "About V-Play", section: "General", page: Qt.resolvedUrl("AboutVPlayPage.qml") }
+    { text: "About Felgo", section: "General", page: Qt.resolvedUrl("AboutFelgoPage.qml") }
   ]
 
   section.property: "section"

@@ -1,4 +1,4 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import "../common"
 import QtQuick.Controls 2.0 as QtQuick2
@@ -6,9 +6,9 @@ import QtQuick.Controls 2.0 as QtQuick2
 Page {
   id: page
   title: "Favorites"
-  rightBarItem: ActivityIndicatorBarItem { opacity: DataModel.loading || scheduleItem.loading ? 1 : 0 }
+  rightBarItem: ActivityIndicatorBarItem { opacity: dataModel.loading || scheduleItem.loading ? 1 : 0 }
 
-  property var favoritesModel: DataModel.favorites ? prepareFavoritesModel(DataModel.favorites) : []
+  property var favoritesModel: dataModel.favorites ? prepareFavoritesModel(dataModel.favorites) : []
   readonly property bool dataAvailable: favoritesModel.length > 0
 
   signal floatingButtonClicked
@@ -16,8 +16,8 @@ Page {
 
   // update UI when favourites change
   Connections {
-    target: DataModel
-    onFavoritesChanged: favoritesModel = DataModel.favorites ? prepareFavoritesModel(DataModel.favorites) : []
+    target: dataModel
+    onFavoritesChanged: favoritesModel = dataModel.favorites ? prepareFavoritesModel(dataModel.favorites) : []
   }
 
   AppText {
@@ -52,7 +52,7 @@ Page {
 
   // prepareFavoritesModel - package favorites data in array ready to be displayed by TimeTableDaySchedule item
   function prepareFavoritesModel(favorites) {
-    if(!(favorites && DataModel.talks))
+    if(!(favorites && dataModel.talks))
       return []
 
     var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -60,7 +60,7 @@ Page {
     // get events and prepare data for sorting and sections
     var events = []
     for(var id in favorites) {
-      var data = DataModel.talks[favorites[id]]
+      var data = dataModel.talks[favorites[id]]
       if(data !== undefined) {
         // prepare event date for sorting
         var date = new Date(data.day+"T00:00.000Z")

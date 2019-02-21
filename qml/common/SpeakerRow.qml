@@ -1,4 +1,4 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import "."
 
@@ -50,7 +50,7 @@ Rectangle {
           width: small? parent.width - dp(Theme.navigationBar.defaultBarItemPadding) : parent.width
           elide: AppText.ElideRight
           maximumLineCount: 1
-          text: DataModel.talks && DataModel.talks[modelData] ? DataModel.talks[modelData].title : ""
+          text: dataModel.talks && dataModel.talks[modelData] ? dataModel.talks[modelData].title : ""
           color: Theme.secondaryTextColor
           font.pixelSize: sp(12)
         }

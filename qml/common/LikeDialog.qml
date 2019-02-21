@@ -1,10 +1,10 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
-import VPlayApps 1.0
+import Felgo 3.0
 import "../common"
 
-// feedback window to contact V-Play
+// feedback window to contact Felgo
 Dialog {
   id: likeDialog
   negativeAction: false

@@ -1,4 +1,4 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import QtQuick.Layouts 1.1
 import "../common"
@@ -14,7 +14,7 @@ Rectangle {
   signal roomClicked
   signal trackClicked(var track)
   property var talk
-  property bool isFavorite: talk && talk.id ? DataModel.isFavorite(talk.id) : false
+  property bool isFavorite: talk && talk.id ? dataModel.isFavorite(talk.id) : false
   property bool small: false
   property bool isListItem: false
 

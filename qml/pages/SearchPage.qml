@@ -1,4 +1,4 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import "../common"
 import QtQuick.Controls 2.0 as QtQuick2
@@ -6,7 +6,7 @@ import QtQuick.Controls 2.0 as QtQuick2
 Page {
   id: page
   title: searchModel.length + " results"
-  rightBarItem: ActivityIndicatorBarItem { opacity: DataModel.loading || scheduleItem.loading ? 1 : 0 }
+  rightBarItem: ActivityIndicatorBarItem { opacity: dataModel.loading || scheduleItem.loading ? 1 : 0 }
 
   property var searchModel: []
   readonly property bool dataAvailable: searchModel !== undefined && searchModel.length > 0

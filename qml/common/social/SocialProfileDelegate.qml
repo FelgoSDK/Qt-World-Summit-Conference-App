@@ -1,6 +1,5 @@
-import VPlay 2.0
 import QtQuick 2.0
-import VPlayApps 1.0
+import Felgo 3.0
 
 SocialUserDelegate {
   height: isLocalUser ? localUserCol.height : otherUserCol.height
@@ -17,7 +16,7 @@ SocialUserDelegate {
     newUserData[fieldName]= newText
     // this updates the userCustomData property below!
     // we need to stringify, otherwise the result cannot be parsed
-    // TODO: add a check to VPGN::updateUserCustomData that assures the type is not an object! currently there is this error: qrc:///qml/VPlay/gamenetwork/VPlayGameNetwork.qml:2407: Error: Cannot assign QJSValue to QString
+    // TODO: add a check to VPGN::updateUserCustomData that assures the type is not an object! currently there is this error: qrc:///qml/Felgo/gamenetwork/FelgoGameNetwork.qml:2407: Error: Cannot assign QJSValue to QString
     gameNetworkItem.updateUserCustomData(JSON.stringify(newUserData))
   }
 
@@ -36,7 +35,7 @@ SocialUserDelegate {
     visible: isLocalUser
 
     Text {
-      text: qsTr("Enter these optional fields so other conference attendees can connect with you. The more infos you provide, the better others can find & connect with you.\n\nWith the Business Meet feature, you can search & filter the conference attendees. Simply enter one of the fields in the search bar of the business meet view, like the company name(e.g. 'V-Play'), the job function (e.g. 'developer'), the interest (e.g. 'mobile') or the experience level ('Qt Veteran').\n\nThe fields you enter will be displayed in the business meet view and also in the leaderboard.")
+      text: qsTr("Enter these optional fields so other conference attendees can connect with you. The more infos you provide, the better others can find & connect with you.\n\nWith the Business Meet feature, you can search & filter the conference attendees. Simply enter one of the fields in the search bar of the business meet view, like the company name(e.g. 'Felgo'), the job function (e.g. 'developer'), the interest (e.g. 'mobile') or the experience level ('Qt Veteran').\n\nThe fields you enter will be displayed in the business meet view and also in the leaderboard.")
       width: parent.width // consider margin right + left
       wrapMode: Text.WrapAtWordBoundaryOrAnywhere
       font.pixelSize: sp(13)

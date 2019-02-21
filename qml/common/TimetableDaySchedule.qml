@@ -1,5 +1,5 @@
 
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import "../common"
 
@@ -132,7 +132,11 @@ Item {
     id: listView
     width: parent.width
     height: parent.height - y
-    model: scheduleData ? listView.prepareArraySections(scheduleData) : []
+    model: JsonListModel {
+      id: listModel
+      source: scheduleData
+      keyField: "id"
+    }
     cacheBuffer: 10000 // allows to cache delegate items to fill up whole listview for invisible area at top and bottom
 
     // search header for listview
@@ -175,8 +179,8 @@ Item {
 
     // row item config
     delegate: ScheduleListItem {
-      item: modelData
-      onSelected: dayScheduleItem.itemClicked(modelData)
+      item: listModel.get(index)
+      onSelected: dayScheduleItem.itemClicked(item)
       parentView: listView
       onLoadingChanged: {
         if(loading)
@@ -199,7 +203,7 @@ Item {
 
   // add or remove item from favorites
   function toggleFavorite(item) {
-    DataModel.toggleFavorite(item)
+    logic.toggleFavorite(item)
   }
 
   // itemIndexForTime - get item index for time in ms
@@ -218,7 +222,7 @@ Item {
 
   // getEventDateTime - build JS date object for event
   function getEventDateTime(event) {
-    var date = new Date(event.day+"T"+event.start+".000"+DataModel.timeZone)
+    var date = new Date(event.day+"T"+event.start+".000"+dataModel.timeZone)
     return date
   }
 

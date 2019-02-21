@@ -1,6 +1,5 @@
 import QtQuick 2.0
-import VPlay 2.0
-import VPlayApps 1.0
+import Felgo 3.0
 
 NotificationBar {
   z: 1
@@ -14,7 +13,7 @@ NotificationBar {
   property int duration: 3000
 
   // colors of notification bar
-  property color tintColor: "#f05352" // default value, will be set to VPlayMultiplayerView::tintColor when used by VPlayMultiplayer
+  property color tintColor: "#f05352" // default value, will be set to MultiplayerView::tintColor when used by FelgoMultiplayer
   property color backgroundColor: Qt.rgba(tintColor.r, tintColor.g, tintColor.b, 0.75)
   property color textColor: "white"
 
@@ -26,7 +25,7 @@ NotificationBar {
   // is emitted when user manually dismisses the notification by clicking
   signal dismiss(string message, var additionalData, bool isActive)
 
-  // display function is called when VPlayMultiplayer receives a notification
+  // display function is called when FelgoMultiplayer receives a notification
   onDisplay: {
     console.debug("Display notification "+message+"; data: "+JSON.stringify(additionalData)+"; isActive: "+isActive)
 

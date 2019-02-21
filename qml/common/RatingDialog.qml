@@ -1,11 +1,10 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
-import VPlayApps 1.0
-import VPlay 2.0
+import Felgo 3.0
 import "../common"
 
-// feedback window to contact V-Play
+// feedback window to contact Felgo
 Dialog {
   id: ratingDialog
   negativeAction: true
@@ -16,12 +15,12 @@ Dialog {
 
   property string ratingUrl: system.isPlatform(System.IOS) ? "itms-apps://itunes.apple.com/at/app/id1286758361?mt=8" :
                              system.isPlatform(System.Android) ? "http://play.google.com/store/apps/details?id=net.vplay.demos.qtws2017" :
-                             "https://v-play.net/qws-conference-in-app-2017"
+                             "https://felgo.com/qws-conference-in-app-2017"
 
   onCanceled: ratingDialog.close()
   onAccepted: {
     amplitude.logEvent("RateInStore")
-    DataModel.setFeedBackSent(true)
+    logic.setFeedBackSent(true)
 
     // open the store site to rate the game instead
     nativeUtils.openUrl(ratingUrl)
@@ -71,7 +70,7 @@ Dialog {
         anchors.horizontalCenter: parent.horizontalCenter
         textSize: sp(12)
         onClicked: {
-          DataModel.setFeedBackSent(true)
+          logic.setFeedBackSent(true)
 
           // close the window
           ratingDialog.close()

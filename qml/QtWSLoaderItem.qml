@@ -1,16 +1,16 @@
-import VPlayApps 1.0
 import QtQuick 2.7
-import VPlay 2.0 // for game network
-import VPlayPlugins 1.0
+import Felgo 3.0
 import "pages"
 import "common"
+import "model"
+import "logic"
 
 Rectangle {
   id: loaderItem
   anchors.fill: parent
   color: Theme.backgroundColor
 
-  // make navigation public (required for V-Play app demo launcher)
+  // make navigation public (required for Felgo app demo launcher)
   property Navigation navigation: mainLoader.item && mainLoader.item.navigation
 
    // if notification was opened, go to inbox after loading
@@ -28,10 +28,24 @@ Rectangle {
     anchors.fill: parent
     visible: false
     asynchronous: true
-    property string updateCheckUrl: system.publishBuild ? "https://v-play.net/qml-sources/qtws2017/QtWSVersionCheck.qml" : "https://v-play.net/qml-sources/qtws2017/QtWSVersionCheck-test.qml"
+    property string updateCheckUrl: system.publishBuild ? "https://felgo.com/qml-sources/qtws2017/QtWSVersionCheck.qml" : "https://felgo.com/qml-sources/qtws2017/QtWSVersionCheck-test.qml"
     source: !system.desktopPlatform ? updateCheckUrl : ""
     onLoaded: versionChecker.visible = true // show result on successful load
     z: 1
+  }
+
+  DataModel {
+    id: dataModel
+    dispatcher: logic
+    onInitializedChanged: logic.loadData() // load/update data after initialization
+  }
+
+  Logic {
+    id: logic
+  }
+
+  ViewHelper {
+    id: viewHelper
   }
 
   // storage for caching data
@@ -43,14 +57,14 @@ Rectangle {
 
     // initialize data model with stored data at startup
     Component.onCompleted: {
-      DataModel.initialize(webStorage)
-      DataModel.increaseLocalAppStarts() // increase local app starts after first initialization
+      logic.initializeDataModel(webStorage)
+      logic.increaseLocalAppStarts() // increase local app starts after first initialization
     }
 
     // update data model with fresh synchronized data
     onInitiallyInServerSyncChanged: {
       if(initiallyInServerSync)
-        DataModel.initialize(webStorage)
+        logic.initializeDataModel(webStorage)
     }
   }
 
@@ -73,7 +87,7 @@ Rectangle {
   }
 
   // game network
-  VPlayGameNetwork {
+  FelgoGameNetwork {
     id: gameNetwork
     gameId: AppSettings.gameId
     secret: AppSettings.gameSecret
@@ -94,8 +108,8 @@ Rectangle {
       if(userScoresInitiallySynced && !system.publishBuild) {
         console.log("Debug Build - reset current score of "+gameNetwork.userHighscoreForCurrentActiveLeaderboard+" to 0")
         var targetScore = 0
-        if(DataModel.favorites) {
-          for(var id in DataModel.favorites)
+        if(dataModel.favorites) {
+          for(var id in dataModel.favorites)
             targetScore++
         }
         gameNetwork.reportRelativeScore(targetScore - gameNetwork.userHighscoreForCurrentActiveLeaderboard)
@@ -105,21 +119,11 @@ Rectangle {
     }
 
     // reset / initialize data model when when GameNetwork user switches
-    onUserInitiallyInSyncChanged: {
-      if(!userInitiallyInSync) {
-        // initially in sync changed to false -> user switched, clear favorites
-        DataModel.favorites = undefined
-        DataModel.initialized = false
-      }
-      else if(!DataModel.initialized) {
-        // initially in sync changed to true again -> initialize data
-        DataModel.initialize(webStorage)
-      }
-    }
+    onUserInitiallyInSyncChanged: logic.resetOrInitializeDataModel(userInitiallyInSync)
   }
 
   // multiplayer
-  VPlayMultiplayer {
+  FelgoMultiplayer {
     id: multiplayer
     gameNetworkItem: gameNetwork
     appKey: AppSettings.appKey
@@ -236,7 +240,7 @@ Rectangle {
 
     // load data if not available and device goes online
     onIsOnlineChanged: {
-      if(!DataModel.loaded && isOnline)
+      if(!dataModel.loaded && isOnline)
         loadDataTimer.start() // use timer to delay load as immediate calls might not get through (network not ready yet)
     }
   }
@@ -245,7 +249,7 @@ Rectangle {
   Timer {
     id: loadDataTimer
     interval: 1000
-    onTriggered: DataModel.loadData()
+    onTriggered: logic.loadData()
   }
 
   // we set the lightness of the used track colors based on the Theme.backgroundColor
@@ -270,11 +274,11 @@ Rectangle {
 
   // getTrackColor - determines track color
   function getTrackColor(track) {
-    if(!DataModel.tracks || DataModel.tracks[track] === undefined)
+    if(!dataModel.tracks || dataModel.tracks[track] === undefined)
       return Theme.secondaryTextColor
 
     var light = 0.45 + 0.25 * (0.5 - trackColorBindingFix.baseTrackLightness)
-    return Qt.hsla(DataModel.tracks[track], 1, light, 1)
+    return Qt.hsla(dataModel.tracks[track], 1, light, 1)
   }
 
   // color to HSL conversion

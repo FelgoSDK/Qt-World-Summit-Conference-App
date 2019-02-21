@@ -1,4 +1,4 @@
-import VPlayApps 1.0
+import Felgo 3.0
 import QtQuick 2.0
 import "../common"
 import QtQuick.Controls 2.0 as QtQuick2
@@ -6,9 +6,9 @@ import QtQuick.Controls 2.0 as QtQuick2
 Page {
   id: page
   title: "Timetable"
-  rightBarItem: ActivityIndicatorBarItem { opacity: DataModel.loading || currentContentLoading ? 1 : 0 }
+  rightBarItem: ActivityIndicatorBarItem { opacity: dataModel.loading || currentContentLoading ? 1 : 0 }
 
-  readonly property var daysModel: DataModel.schedule ? prepareDaysModel(DataModel.schedule) : []
+  readonly property var daysModel: dataModel.schedule ? prepareDaysModel(dataModel.schedule) : []
   readonly property bool dataAvailable: daysModel.length > 0
 
   readonly property var currentContentItem: swipeView.itemAt(swipeView.currentIndex)
@@ -74,7 +74,7 @@ Page {
         onSearchAccepted: {
           if(text !== "") {
             amplitude.logEvent("Search Talk",{"term" : text})
-            var result = DataModel.search(text)
+            var result = logic.search(text, dataModel.talks)
             page.navigationStack.leftColumnIndex = 1
             page.navigationStack.popAllExceptFirstAndPush(Qt.resolvedUrl("SearchPage.qml"), { searchModel: result })
           }
@@ -137,14 +137,14 @@ Page {
 
   // prepareScheduleModel - creates the events list from schedule data (per day, tab content)
   function prepareScheduleModel(data, day, weekday) {
-    if(!(data && data.rooms && DataModel.talks))
+    if(!(data && data.rooms && dataModel.talks))
       return []
 
     // get events for all rooms and prepare sections
     var events = []
     for(var room in data.rooms) {
       for(var eventIdx in data.rooms[room]) {
-        var talk = DataModel.talks[data.rooms[room][eventIdx]]
+        var talk = dataModel.talks[data.rooms[room][eventIdx]]
         if(talk !== undefined) {
           // prepare section and add talk to events
           talk.section = weekday+", "+talk.start.substring(0, 2) + ":00"

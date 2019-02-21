@@ -10,8 +10,8 @@ furnished to do so, subject to the following conditions:
 Permission is NOT granted to merge, publish, distribute, sublicense and/or
 sell the provided image, audio and video files of this software.
 
-You may not redistribute the source code under the name of V-Play Engine or any
-other V-Play related trademarks.
+You may not redistribute the source code under the name of Felgo or any
+other related trademarks.
 
 This app uses QZXing, see the license here:
 https://github.com/ftylitak/qzxing/blob/master/LICENSE

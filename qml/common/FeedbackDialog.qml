@@ -1,10 +1,10 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
-import VPlayApps 1.0
+import Felgo 3.0
 import "../common"
 
-// feedback window to contact V-Play
+// feedback window to contact Felgo
 Dialog {
   id: feedback
   negativeAction: true
@@ -23,7 +23,7 @@ Dialog {
   }
 
   onCanceled: {
-    DataModel.setFeedBackSent(true)
+    logic.setFeedBackSent(true)
     feedback.close()
   }
   onAccepted: {
@@ -38,21 +38,21 @@ Dialog {
       hintText.text = originalHintText
     }
 
-    // check if there has been feedback and send it to V-Play
+    // check if there has been feedback and send it to Felgo
     else if (feedbackInput.text){
       amplitude.logEvent("Send Feedback")
 
-      // send the enteredText and the optional email to V-Play
-      //nativeUtils.sendEmail("support@v-play.net", gameTitle + " Feedback", "What do you think about" + gameTitle + "? What do you like, what are you missing?\nPlease add your feedback here:\n\n")
+      // send the enteredText and the optional email to Felgo
+      //nativeUtils.sendEmail("support@felgo.com", gameTitle + " Feedback", "What do you think about" + gameTitle + "? What do you like, what are you missing?\nPlease add your feedback here:\n\n")
 
       var feedbackContent = feedbackInput.text + "\n\n" +
-          "\nApp Starts: " + DataModel.localAppStarts +
+          "\nApp Starts: " + dataModel.localAppStarts +
           "\nApp VersionCode: " + system.appVersionCode +
           "\nPlatform: " + Qt.platform.os +
           "\nosType: " + system.osType +
           "\nosVersion: " + system.osVersion +
           "\nDeviceModel: " + nativeUtils.deviceModel() +
-          "\nV-Play Version: " + system.vplayVersion +
+          "\nFelgo Version: " + system.vplayVersion +
           "\nUDID: " + system.UDID +
           "\nUser Id: " + socialViewItem.gameNetworkItem.user.userId +
           "\nUser Name: " +socialViewItem.gameNetworkItem.userName
@@ -60,7 +60,7 @@ Dialog {
       console.debug("Feedback: " + feedbackContent + "; email: " + emailInput.text)
       sendFeedback(feedbackContent, emailInput.text)
 
-      DataModel.setFeedBackSent(true)
+      logic.setFeedBackSent(true)
       feedback.close()
     } else {
       hintText.text = "Please enter your opinion!"
@@ -237,14 +237,14 @@ Dialog {
 
   } // content area
 
-  // sendFeedback - uses XMLHttpRequest object to send the feedback to the V-Play servers
+  // sendFeedback - uses XMLHttpRequest object to send the feedback to the Felgo servers
   function sendFeedback(feedback, email) {
     var feedbackSecret = AppSettings.feedbackSecret
 
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
       if (xhr.readyState === XMLHttpRequest.DONE) {
-        console.debug("Successfully sent feedback to V-Play, response:", xhr.responseText)
+        console.debug("Successfully sent feedback to Felgo, response:", xhr.responseText)
       }
     }
     xhr.open("POST", AppSettings.feedbackUrl, true)
