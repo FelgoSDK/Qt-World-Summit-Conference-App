@@ -1,10 +1,11 @@
 buildscript {
     repositories {
+        maven { url 'https://maven.google.com' }
         jcenter()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.0'
+        classpath 'com.android.tools.build:gradle:3.2.1'
     }
 }
 
@@ -20,10 +21,12 @@ apply plugin: 'com.android.application'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+
     compile 'net.vplay.plugins:plugin-onesignal:3.+' // one signal plugin
     compile 'net.vplay.plugins:plugin-notification:3.+' // local notifications
     compile 'net.vplay.plugins:plugin-facebook:3.+' // facebook plugin
     compile 'net.vplay.plugins:plugin-amplitude:3.+' // amplitude plugin
+
 }
 
 android {
@@ -41,10 +44,13 @@ android {
      *******************************************************/
 
     compileSdkVersion androidCompileSdkVersion.toInteger()
-
     buildToolsVersion androidBuildToolsVersion
 
-    defaultConfig.applicationId = "net.vplay.demos.qtws2017"
+    defaultConfig {
+      applicationId = productIdentifier
+      versionCode = productVersionCode.toInteger()
+      versionName = productVersionName
+    }
 
     sourceSets {
         main {
@@ -63,3 +69,4 @@ android {
         abortOnError false
     }
 }
+
