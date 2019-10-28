@@ -18,28 +18,33 @@
 
 #import <UIKit/UIKit.h>
 
-/*!
- @class FBSDKApplicationDelegate
+NS_ASSUME_NONNULL_BEGIN
 
- @abstract
- The FBSDKApplicationDelegate is designed to post process the results from Facebook Login
+/**
+
+  The FBSDKApplicationDelegate is designed to post process the results from Facebook Login
  or Facebook Dialogs (or any action that requires switching over to the native Facebook
  app or Safari).
 
- @discussion
+
+
  The methods in this class are designed to mirror those in UIApplicationDelegate, and you
  should call them in the respective methods in your AppDelegate implementation.
  */
+NS_SWIFT_NAME(ApplicationDelegate)
 @interface FBSDKApplicationDelegate : NSObject
 
-/*!
- @abstract Gets the singleton instance.
- */
-+ (instancetype)sharedInstance;
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)new NS_UNAVAILABLE;
 
-/*!
- @abstract
- Call this method from the [UIApplicationDelegate application:openURL:sourceApplication:annotation:] method
+/**
+ Gets the singleton instance.
+ */
+@property (class, nonatomic, readonly, strong) FBSDKApplicationDelegate *sharedInstance
+NS_SWIFT_NAME(shared);
+
+/**
+  Call this method from the [UIApplicationDelegate application:openURL:sourceApplication:annotation:] method
  of the AppDelegate for your app. It should be invoked for the proper processing of responses during interaction
  with the native Facebook app or Safari as part of SSO authorization flow or Facebook dialogs.
 
@@ -52,16 +57,15 @@
  @param annotation The annotation as passed to [UIApplicationDelegate application:openURL:sourceApplication:annotation:].
 
  @return YES if the url was intended for the Facebook SDK, NO if not.
-  */
+ */
 - (BOOL)application:(UIApplication *)application
             openURL:(NSURL *)url
-  sourceApplication:(NSString *)sourceApplication
-         annotation:(id)annotation;
+  sourceApplication:(nullable NSString *)sourceApplication
+         annotation:(nullable id)annotation;
 
-#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_9_3
-/*!
- @abstract
- Call this method from the [UIApplicationDelegate application:openURL:options:] method
+#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_9_0
+/**
+  Call this method from the [UIApplicationDelegate application:openURL:options:] method
  of the AppDelegate for your app. It should be invoked for the proper processing of responses during interaction
  with the native Facebook app or Safari as part of SSO authorization flow or Facebook dialogs.
 
@@ -75,13 +79,14 @@
  */
 - (BOOL)application:(UIApplication *)application
             openURL:(NSURL *)url
-            options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options;
+            options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options;
 #endif
 
-/*!
- @abstract
- Call this method from the [UIApplicationDelegate application:didFinishLaunchingWithOptions:] method
+/**
+  Call this method from the [UIApplicationDelegate application:didFinishLaunchingWithOptions:] method
  of the AppDelegate for your app. It should be invoked for the proper use of the Facebook SDK.
+ As part of SDK initialization basic auto logging of app events will occur, this can be
+controlled via 'FacebookAutoLogAppEventsEnabled' key in the project info plist file.
 
  @param application The application as passed to [UIApplicationDelegate application:didFinishLaunchingWithOptions:].
 
@@ -89,6 +94,19 @@
 
  @return YES if the url was intended for the Facebook SDK, NO if not.
  */
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
+- (BOOL)application:(UIApplication *)application
+didFinishLaunchingWithOptions:(nullable NSDictionary<UIApplicationLaunchOptionsKey, id> *)launchOptions;
+
+/**
+  Call this method to manually initialize SDK.
+  As we initialize SDK automatically, this should only be called when auto initialization is disabled, this can be
+ controlled via 'FacebookAutoInitEnabled' key in the project info plist file.
+
+ @param launchOptions The launchOptions as passed to [UIApplicationDelegate application:didFinishLaunchingWithOptions:].
+ Could be nil if you don't call this function from [UIApplicationDelegate application:didFinishLaunchingWithOptions:].
+ */
++ (void)initializeSDK:(nullable NSDictionary<UIApplicationLaunchOptionsKey, id> *)launchOptions;
 
 @end
+
+NS_ASSUME_NONNULL_END

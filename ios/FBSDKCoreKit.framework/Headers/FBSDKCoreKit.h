@@ -27,22 +27,30 @@
 #import <FBSDKCoreKit/FBSDKGraphRequest.h>
 #import <FBSDKCoreKit/FBSDKGraphRequestConnection.h>
 #import <FBSDKCoreKit/FBSDKGraphRequestDataAttachment.h>
-#import <FBSDKCoreKit/FBSDKMacros.h>
 #import <FBSDKCoreKit/FBSDKSettings.h>
 #import <FBSDKCoreKit/FBSDKTestUsersManager.h>
 #import <FBSDKCoreKit/FBSDKUtility.h>
 
 #if !TARGET_OS_TV
+#import <FBSDKCoreKit/FBSDKAppLink.h>
+#import <FBSDKCoreKit/FBSDKAppLinkNavigation.h>
 #import <FBSDKCoreKit/FBSDKAppLinkResolver.h>
+#import <FBSDKCoreKit/FBSDKAppLinkResolving.h>
+#import <FBSDKCoreKit/FBSDKAppLinkReturnToRefererController.h>
+#import <FBSDKCoreKit/FBSDKAppLinkReturnToRefererView.h>
+#import <FBSDKCoreKit/FBSDKAppLinkTarget.h>
 #import <FBSDKCoreKit/FBSDKAppLinkUtility.h>
 #import <FBSDKCoreKit/FBSDKGraphErrorRecoveryProcessor.h>
+#import <FBSDKCoreKit/FBSDKMeasurementEvent.h>
 #import <FBSDKCoreKit/FBSDKMutableCopying.h>
 #import <FBSDKCoreKit/FBSDKProfile.h>
 #import <FBSDKCoreKit/FBSDKProfilePictureView.h>
+#import <FBSDKCoreKit/FBSDKURL.h>
+#import <FBSDKCoreKit/FBSDKWebViewAppLinkResolver.h>
 #else
 #import <FBSDKCoreKit/FBSDKDeviceButton.h>
 #import <FBSDKCoreKit/FBSDKDeviceViewControllerBase.h>
 #endif
 
-#define FBSDK_VERSION_STRING @"4.17.0"
-#define FBSDK_TARGET_PLATFORM_VERSION @"v2.8"
+#define FBSDK_VERSION_STRING @"5.3.0"
+#define FBSDK_TARGET_PLATFORM_VERSION @"v4.0"
