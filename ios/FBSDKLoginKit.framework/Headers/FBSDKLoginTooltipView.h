@@ -20,15 +20,17 @@
 
 #import <FBSDKLoginKit/FBSDKTooltipView.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol FBSDKLoginTooltipViewDelegate;
 
-/*!
- @class FBSDKLoginTooltipView
+/**
 
- @abstract Represents a tooltip to be displayed next to a Facebook login button
+  Represents a tooltip to be displayed next to a Facebook login button
   to highlight features for new users.
 
- @discussion The `FBSDKLoginButton` may display this view automatically. If you do
+
+ The `FBSDKLoginButton` may display this view automatically. If you do
   not use the `FBSDKLoginButton`, you can manually call one of the `present*` methods
   as appropriate and customize behavior via `FBSDKLoginTooltipViewDelegate` delegate.
 
@@ -37,52 +39,51 @@
   (e.g., to test the UI layout) by implementing the delegate or setting `forceDisplay` to YES.
 
  */
+NS_SWIFT_NAME(FBLoginTooltipView)
 @interface FBSDKLoginTooltipView : FBSDKTooltipView
 
-/*! @abstract the delegate */
+/**  the delegate */
 @property (nonatomic, weak) id<FBSDKLoginTooltipViewDelegate> delegate;
 
-/*! @abstract if set to YES, the view will always be displayed and the delegate's
+/**  if set to YES, the view will always be displayed and the delegate's
   `loginTooltipView:shouldAppear:` will NOT be called. */
-@property (nonatomic, assign) BOOL forceDisplay;
+@property (nonatomic, assign, getter=shouldForceDisplay) BOOL forceDisplay;
 
 @end
 
-/*!
+/**
  @protocol
 
- @abstract
- The `FBSDKLoginTooltipViewDelegate` protocol defines the methods used to receive event
+  The `FBSDKLoginTooltipViewDelegate` protocol defines the methods used to receive event
  notifications from `FBSDKLoginTooltipView` objects.
  */
+NS_SWIFT_NAME(LoginTooltipViewDelegate)
 @protocol FBSDKLoginTooltipViewDelegate <NSObject>
 
 @optional
 
-/*!
- @abstract
- Asks the delegate if the tooltip view should appear
+/**
+  Asks the delegate if the tooltip view should appear
 
  @param view The tooltip view.
  @param appIsEligible The value fetched from the server identifying if the app
  is eligible for the new login experience.
 
- @discussion Use this method to customize display behavior.
+
+ Use this method to customize display behavior.
  */
 - (BOOL)loginTooltipView:(FBSDKLoginTooltipView *)view shouldAppear:(BOOL)appIsEligible;
 
-/*!
- @abstract
- Tells the delegate the tooltip view will appear, specifically after it's been
+/**
+  Tells the delegate the tooltip view will appear, specifically after it's been
  added to the super view but before the fade in animation.
 
  @param view The tooltip view.
  */
 - (void)loginTooltipViewWillAppear:(FBSDKLoginTooltipView *)view;
 
-/*!
- @abstract
- Tells the delegate the tooltip view will not appear (i.e., was not
+/**
+  Tells the delegate the tooltip view will not appear (i.e., was not
  added to the super view).
 
  @param view The tooltip view.
@@ -91,3 +92,5 @@
 
 
 @end
+
+NS_ASSUME_NONNULL_END
