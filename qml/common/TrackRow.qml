@@ -47,7 +47,7 @@ Rectangle {
     width: dp(4)
     height: parent.height - x * 6
     anchors.verticalCenter: parent.verticalCenter
-    color: loaderItem.getTrackColor(track.title)
+    color: track.color//loaderItem.getTrackColor(track.color)
   }
 
   Rectangle {

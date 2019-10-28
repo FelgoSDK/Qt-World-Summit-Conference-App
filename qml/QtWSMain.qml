@@ -9,9 +9,13 @@ App {
 
   property color secondaryTintColor: "#09102b"
 
+  property string ratingUrl: system.isPlatform(System.IOS) ? "itms-apps://itunes.apple.com/at/app/id1484310915?mt=8" :
+                             system.isPlatform(System.Android) ? "http://play.google.com/store/apps/details?id=net.vplay.demos.qtws2019" :
+                             "https://felgo.com/qws-conference-in-app-2019"
+
   onInitTheme: {
-    if(system.desktopPlatform)
-      Theme.platform = "ios"
+//    if(system.desktopPlatform)
+//      Theme.platform = "ios"
 
     // default theme setup
     Theme.colors.tintColor = "#41cd52"
@@ -25,6 +29,7 @@ App {
 
     // status bar
     Theme.colors.statusBarStyle = Qt.binding(function() { return Theme.isAndroid ? Theme.colors.statusBarStyleWhite : Theme.colors.statusBarStyleBlack })
+    Theme.dialog.buttonTextSize = 18
   }
 
   // handle Android back button (show dialog before closing application)

@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.9
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
 import Felgo 3.0
@@ -14,7 +14,7 @@ Dialog {
   outsideTouchable: false
 
   property string originalHintText: feedbackInput.visible ?
-                                      "Your feedback helps us to improve this app"
+                                      "Oh bummer. Your feedback helps us to improve this app!"
                                     : "You can also add your email address so we can reply to you."
 
   onIsOpenChanged: {
@@ -85,7 +85,8 @@ Dialog {
 
     Column {
       id: content
-      width: parent.width
+      width: parent.width - dp(Theme.navigationBar.defaultBarItemPadding)*2
+      anchors.horizontalCenter: parent.horizontalCenter
       spacing: dp(10)
 
       // spacer
@@ -97,24 +98,25 @@ Dialog {
       // feedback header
       Text {
         id: headerText
-        horizontalAlignment: Text.AlignHCenter
-        anchors.horizontalCenter: parent.horizontalCenter
+        horizontalAlignment: Theme.isIos ? Text.AlignHCenter : Text.AlignLeft
+        anchors.horizontalCenter: Theme.isIos ? parent.horizontalCenter : undefined
         text: "Send Feedback"
         color: Theme.textColor
         font.pixelSize: sp(18)
-        width: parent.width * 0.8
+        width: parent.width
         wrapMode: Text.Wrap
+        font.bold: true
       }
 
       // feedback note
       Text {
         id: hintText
-        horizontalAlignment: Text.AlignHCenter
-        anchors.horizontalCenter: parent.horizontalCenter
+        horizontalAlignment: Theme.isIos ? Text.AlignHCenter : Text.AlignLeft
+        anchors.horizontalCenter: Theme.isIos ? parent.horizontalCenter : undefined
         text: originalHintText
         color: Theme.textColor
-        font.pixelSize: sp(9)
-        width: parent.width * 0.8
+        font.pixelSize: sp(14)
+        width: parent.width
         wrapMode: Text.Wrap
       }
 
@@ -122,11 +124,11 @@ Dialog {
       TextField {
         id: emailInput
         anchors.horizontalCenter: parent.horizontalCenter
-        width: parent.width * 0.8
+        width: parent.width
         visible: !feedbackInput.visible
 
         horizontalAlignment: Text.AlignHCenter
-        font.pixelSize: sp(10)
+        font.pixelSize: sp(12)
         maximumLength: 200
         placeholderText: focus ? "" : "Your email (optional)"
         inputMethodHints: Qt.ImhNoPredictiveText
@@ -171,13 +173,13 @@ Dialog {
       TextArea {
         id: feedbackInput
         anchors.horizontalCenter: parent.horizontalCenter
-        width: parent.width * 0.8
+        width: parent.width
         height: emailInput.height * 4
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
         text: placeHolder
 
         horizontalAlignment: Text.AlignHCenter
-        font.pixelSize: sp(10)
+        font.pixelSize: sp(12)
         inputMethodHints: Qt.ImhNoPredictiveText
         style: TextAreaStyle {backgroundColor: "transparent"; textColor: "black" }
 
@@ -250,7 +252,7 @@ Dialog {
     xhr.open("POST", AppSettings.feedbackUrl, true)
     xhr.setRequestHeader("Content-Type", "application/json")
     xhr.setRequestHeader("Accept", "application/json")
-    var send = { "shared_secret": feedbackSecret, "subject": "QtWS 2017 Feedback", "message": feedback, "name": "", "from": email }
+    var send = { "shared_secret": feedbackSecret, "subject": "QtWS 2019 Feedback", "message": feedback, "name": "", "from": email }
     console.debug("sending this feedback request:", JSON.stringify(send))
     xhr.send(JSON.stringify(send))
   }

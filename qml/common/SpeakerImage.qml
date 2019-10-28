@@ -21,6 +21,13 @@ Rectangle {
   property alias source: webImg.actualSource
   property real padding: dp(6)
 
+  Component.onCompleted: {
+    // custom fix for KDAB image
+    if(webImg.source.toString().indexOf("KDAB_logo.png") > 0) {
+      webImg.fillMode = Image.PreserveAspectFit
+    }
+  }
+
   RoundedImage {
     id: defaultImg
     anchors.fill: webImg
@@ -37,6 +44,8 @@ Rectangle {
     radius: parent.radius / parent.width * width
     source: actualSource
     visible: img.status === Image.Ready
+
+    fillMode: Image.PreserveAspectCrop
 
     property string actualSource: ""
     property bool loading: false

@@ -20,13 +20,15 @@ allprojects {
 apply plugin: 'com.android.application'
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    compile 'net.vplay.plugins:plugin-onesignal:3.+' // one signal plugin
-    compile 'net.vplay.plugins:plugin-notification:3.+' // local notifications
-    compile 'net.vplay.plugins:plugin-facebook:3.+' // facebook plugin
-    compile 'net.vplay.plugins:plugin-amplitude:3.+' // amplitude plugin
+    implementation "com.android.support:support-core-utils:27.1.0"
+    implementation "com.android.support:appcompat-v7:27.1.0"
 
+    implementation 'net.vplay.plugins:plugin-onesignal:3.+' // one signal plugin
+    implementation 'net.vplay.plugins:plugin-notification:3.+' // local notifications
+    implementation 'net.vplay.plugins:plugin-facebook:3.+' // facebook plugin
+    implementation 'net.vplay.plugins:plugin-amplitude:3.+' // amplitude plugin
 }
 
 android {
@@ -44,6 +46,7 @@ android {
      *******************************************************/
 
     compileSdkVersion androidCompileSdkVersion.toInteger()
+
     buildToolsVersion androidBuildToolsVersion
 
     defaultConfig {
@@ -69,4 +72,3 @@ android {
         abortOnError false
     }
 }
-

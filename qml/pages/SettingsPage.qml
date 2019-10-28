@@ -1,5 +1,5 @@
 import Felgo 3.0
-import QtQuick 2.0
+import QtQuick 2.9
 import "../common"
 import QtQuick.Layouts 1.1
 
@@ -8,13 +8,51 @@ FlickablePage {
   rightBarItem: ActivityIndicatorBarItem { opacity: dataModel.loading ? 1 : 0 }
 
   flickable.contentWidth: width
-  flickable.contentHeight: content.height + content.y * 2
+  flickable.contentHeight: content.height + dp(20)
 
   ColumnLayout {
     id: content
-    y: spacing * 2
+    //y: spacing * 2
     width: parent.width
     spacing: dp(10)
+
+    SimpleRow {
+      visible: Theme.isAndroid
+      iconSource: IconType.star
+      icon.color: Theme.tintColor
+      text: qsTr("Rate this App")
+      style.showDisclosure: false
+      onSelected: {
+        amplitude.logEvent("RateInStore")
+        logic.setFeedBackSent(true)
+        nativeUtils.openUrl(ratingUrl)
+      }
+    }
+
+    SimpleRow {
+      visible: Theme.isAndroid
+      iconSource: IconType.share
+      icon.color: Theme.tintColor
+      text: qsTr("Share with Friends")
+      style.showDisclosure: false
+      onSelected: {
+        amplitude.logEvent("Share Button Pressed")
+        nativeUtils.share("Check out the Qt World Summit 2019 Conference App!", "https://felgo.com/qws-conference-in-app-2019")
+      }
+    }
+
+    // separator
+    Item {
+      visible: Theme.isAndroid
+      Layout.fillWidth: true
+      Layout.preferredHeight: parent.spacing * 2
+      Rectangle {
+        width: parent.width * 0.4
+        height: px(1)
+        color: Theme.tintColor
+        anchors.centerIn: parent
+      }
+    }
 
     // cache / data buttons
     AppButton {
@@ -112,7 +150,7 @@ FlickablePage {
       AppButton {
         anchors.verticalCenter: parent.verticalCenter
         property string target: Theme.platform !== "ios" ? "iOS" : "Android"
-        text: system.isPlatform(System.IOS) && target == "Android" ? "Custom" : target
+        text: system.isPlatform(System.IOS) && target == "Android" ? "Material" : target
         onClicked: {
           amplitude.logEvent("Change Theme", {"theme" : target, "platform" : (system.isPlatform(System.IOS) ? "iOS" : "Android")})
           Theme.platform = target.toLowerCase()

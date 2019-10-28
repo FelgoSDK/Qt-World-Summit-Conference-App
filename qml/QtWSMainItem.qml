@@ -98,7 +98,7 @@ Item {
       }
       else {
         // default notification
-        NativeDialog.confirm("The conference starts soon!", "Thanks for using our app, we wish you a great Qt World Summit 2017!", function(){}, false)
+        NativeDialog.confirm("The conference starts soon!", "Thanks for using our app, we wish you a great Qt World Summit 2019!", function(){}, false)
       }
     }
   }
@@ -132,9 +132,9 @@ Item {
 
     // add notification before world summit starts!
     var nowTime = new Date().getTime()
-    var eveningBeforeConferenceTime = new Date("2017-10-09T21:00.000"+dataModel.timeZone).getTime()
+    var eveningBeforeConferenceTime = new Date("2019-11-03T21:00.000"+dataModel.timeZone).getTime()
     if(nowTime < eveningBeforeConferenceTime) {
-      var text = "Felgo wishes all the best for Qt World Summit 2017!"
+      var text = "Felgo wishes all the best for Qt World Summit 2019 tomorrow!"
       var notification = {
         notificationId: -1,
         message: text,
@@ -211,65 +211,17 @@ Item {
     }
 
     // Android drawer header item
-    headerView: Item {
+    headerView: AppImage {
+      id: drawerImage
       width: parent.width
-      height: dp(75) + Theme.statusBarHeight
-      clip: true
+      source: "../assets/QtWS2019_web banner1.png"
+      fillMode: AppImage.PreserveAspectFit
 
-      Rectangle {
+      MouseArea {
         anchors.fill: parent
-        color: Theme.tintColor
-      }
-
-      AppImage {
-        width: parent.width
-        fillMode: AppImage.PreserveAspectFit
-        source: "../assets/venue_photo.jpg"
-        anchors.verticalCenter: parent.verticalCenter
-      }
-
-      AppImage {
-        width: parent.width
-        fillMode: AppImage.PreserveAspectFit
-        source: "../assets/venue_photo.jpg"
-        anchors.verticalCenter: parent.verticalCenter
-        opacity: 0.5
-        layer.enabled: true
-        layer.effect: Colorize {
-          id: titleImgColorize
-          lightness: 0.1
-          saturation: 0.5
-
-          // we set the hue for the colorize effect based on the Theme.tintColor
-          // this could be done with a simple property binding, but that strangely causes issues on Linux Qt 5.8
-          // which is why this workaround with manual signal handling is used:
-          property color baseColor
-          Component.onCompleted: updateHue()
-          Connections {
-            target: app
-            onSecondaryTintColorChanged: titleImgColorize.updateHue()
-          }
-          function updateHue() {
-            titleImgColorize.baseColor = app.secondaryTintColor
-            var hslColor = loaderItem.colorToHsl(titleImgColorize.baseColor)
-            titleImgColorize.hue = hslColor[0]
-            titleImgColorize.saturation = hslColor[1]
-            titleImgColorize.lightness = hslColor[2]
-          }
-        }
-      }
-
-      AppImage {
-        width: parent.width * 0.75
-        source: "../assets/QtWS2017_logo_white.png"
-        fillMode: AppImage.PreserveAspectFit
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: Theme.statusBarHeight + ((parent.height - Theme.statusBarHeight) - height) * 0.5
-        layer.enabled: true
-        layer.effect: DropShadow {
-          color: Qt.rgba(0,0,0,0.5)
-          radius: 16
-          samples: 16
+        onClicked: {
+          navigation.currentIndex = 0
+          navigation.drawer.close()
         }
       }
     }
@@ -310,7 +262,7 @@ Item {
     } // main
 
     NavigationItem {
-      title: "Timetable"
+      title: "Agenda"
       icon: IconType.calendaro
 
       NavigationStack {
@@ -407,14 +359,14 @@ Item {
       asynchronous: true
     } // venue
 
-    NavigationItem {
-      title: "QR Contacts"
-      icon: IconType.qrcode
-      showItem: Theme.isAndroid
+//    NavigationItem {
+//      title: "QR Contacts"
+//      icon: IconType.qrcode
+//      showItem: Theme.isAndroid
 
-      asynchronous: true
-      sourceComponent: contactsComponent
-    } // qr contacts
+//      asynchronous: true
+//      sourceComponent: contactsComponent
+//    } // qr contacts
 
     NavigationItem {
       title: "Settings"
@@ -425,37 +377,37 @@ Item {
       asynchronous: true
     } // settings
 
-    NavigationItem {
-      title: "About Felgo"
-      showItem: Theme.isAndroid
-      iconComponent: Item {
-        height: parent.height
-        width: height
+//    NavigationItem {
+//      title: "About Felgo"
+//      showItem: Theme.isAndroid
+//      iconComponent: Item {
+//        height: parent.height
+//        width: height
 
-        property bool selected: parent && parent.selected
+//        property bool selected: parent && parent.selected
 
-        Icon {
-          anchors.centerIn: parent
-          width: height
-          height: parent.height
-          icon: IconType.home
-          color: !parent.selected ? Theme.textColor  : Theme.tintColor
-          visible: !felgoIcon.visible
-        }
+//        Icon {
+//          anchors.centerIn: parent
+//          width: height
+//          height: parent.height
+//          icon: IconType.home
+//          color: !parent.selected ? Theme.textColor  : Theme.tintColor
+//          visible: !felgoIcon.visible
+//        }
 
-        Image {
-          id: felgoIcon
-          height: parent.height
-          anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
-          fillMode: Image.PreserveAspectFit
-          source: !parent.selected ? "../assets/Felgo_icon_nav_off.png" : "../assets/Felgo_icon_nav.png"
-          visible: Theme.isIos || Theme.backgroundColor.r == 1 && Theme.backgroundColor.g == 1 && Theme.backgroundColor.b == 1
-        }
-      }
+//        Image {
+//          id: felgoIcon
+//          height: parent.height
+//          anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
+//          fillMode: Image.PreserveAspectFit
+//          source: !parent.selected ? "../assets/Felgo_icon_nav_off.png" : "../assets/Felgo_icon_nav.png"
+//          visible: Theme.isIos || Theme.backgroundColor.r == 1 && Theme.backgroundColor.g == 1 && Theme.backgroundColor.b == 1
+//        }
+//      }
 
-      sourceComponent: aboutFelgoComponent
-      asynchronous: true
-    } // About Felgo
+//      sourceComponent: aboutFelgoComponent
+//      asynchronous: true
+//    } // About Felgo
   } // nav
 
   Component {
@@ -525,13 +477,13 @@ Item {
     }
   }
 
-  Component {
-    id: contactsComponent
-    NavigationStack {
-      // Note: QZXing library for barcode scanning is not available with QML Live Reloading
-      Component.onCompleted: push(Qt.resolvedUrl("pages/ContactsPage.qml"))
-    }
-  }
+//  Component {
+//    id: contactsComponent
+//    NavigationStack {
+//      // Note: QZXing library for barcode scanning is not available with QML Live Reloading
+//      Component.onCompleted: push(Qt.resolvedUrl("pages/ContactsPage.qml"))
+//    }
+//  }
 
   Component {
     id: settingsComponent
@@ -540,12 +492,12 @@ Item {
     }
   }
 
-  Component {
-    id: aboutFelgoComponent
-    NavigationStack {
-      Component.onCompleted: push(Qt.resolvedUrl("pages/AboutFelgoPage.qml"))
-    }
-  }
+//  Component {
+//    id: aboutFelgoComponent
+//    NavigationStack {
+//      Component.onCompleted: push(Qt.resolvedUrl("pages/AboutFelgoPage.qml"))
+//    }
+//  }
 
   SocialView {
     id: socialView
@@ -581,12 +533,12 @@ Item {
 
       // set active Android NavigationItem in drawer
       if(Theme.isAndroid) {
-        if(activeTitle === "About Felgo")
-          navigation.currentIndex = 12
-        else if(activeTitle === "Settings")
-          navigation.currentIndex = 11
-        else if(activeTitle === "Contacts")
+//        if(activeTitle === "About Felgo")
+//          navigation.currentIndex = 12
+        if(activeTitle === "Settings")
           navigation.currentIndex = 10
+//        else if(activeTitle === "Contacts")
+//          navigation.currentIndex = 10
         else if(activeTitle === "Venue")
           navigation.currentIndex = 9
         else if(activeTitle === "Tracks")
@@ -646,6 +598,7 @@ Item {
   // check app starts and show feedback dialog if required
   function checkFeedbackDialog() {
     if(dataModel.localAppStarts > 5 && !dataModel.feedBackSent) {
+      Theme.dialog.dividerHeight = 0
       likeDialog.open()
     }
   }
@@ -672,6 +625,7 @@ Item {
 
       // open the rating dialog instead
       likeDialog.close()
+      Theme.dialog.dividerHeight = 1
       ratingDialog.open()
     }
   }

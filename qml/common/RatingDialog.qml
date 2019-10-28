@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.9
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
 import Felgo 3.0
@@ -13,18 +13,18 @@ Dialog {
   autoSize: true
   outsideTouchable: false
 
-  property string ratingUrl: system.isPlatform(System.IOS) ? "itms-apps://itunes.apple.com/at/app/id1286758361?mt=8" :
-                             system.isPlatform(System.Android) ? "http://play.google.com/store/apps/details?id=net.vplay.demos.qtws2017" :
-                             "https://felgo.com/qws-conference-in-app-2017"
-
-  onCanceled: ratingDialog.close()
+  onCanceled: {
+    logic.setFeedBackSent(true)
+    ratingDialog.close()
+  }
   onAccepted: {
     amplitude.logEvent("RateInStore")
     logic.setFeedBackSent(true)
 
     // open the store site to rate the game instead
-    nativeUtils.openUrl(ratingUrl)
     ratingDialog.close()
+
+    openUrlTimeout.start()
   }
 
   Item {
@@ -34,53 +34,62 @@ Dialog {
 
     Column {
       id: content
-      width: parent.width
+      width: parent.width - dp(Theme.navigationBar.defaultBarItemPadding)*2
       anchors.horizontalCenter: parent.horizontalCenter
-      anchors.top: parent.top
-      anchors.margins: dp(20)
+      topPadding: dp(15)
       spacing: dp(10)
+      bottomPadding: dp(15)
 
       // rating header
       Text {
         id: ratingText
-        horizontalAlignment: Text.AlignHCenter
-        anchors.horizontalCenter: parent.horizontalCenter
+        horizontalAlignment: Theme.isIos ? Text.AlignHCenter : Text.AlignLeft
+        anchors.horizontalCenter: Theme.isIos ? parent.horizontalCenter : undefined
         text: "Rate This App"
         color: Theme.textColor
         font.pixelSize: sp(18)
         width: parent.width * 0.8//- anchors.topMargin * 2
         wrapMode: Text.Wrap
+        font.bold: true
       }
 
       // rating note
       Text {
         id: ratingNote
-        horizontalAlignment: Text.AlignHCenter
-        anchors.horizontalCenter: parent.horizontalCenter
-        text: "Support us by rating the app in the store!"
+        horizontalAlignment: Theme.isIos ? Text.AlignHCenter : Text.AlignLeft
+        anchors.horizontalCenter: Theme.isIos ? parent.horizontalCenter : undefined
+        text: "Great that you like it! Please support us by rating the app in the store."
         color: Theme.textColor
-        font.pixelSize: sp(10)
+        font.pixelSize: sp(14)
         width: parent.width * 0.8//- 20
         wrapMode: Text.Wrap
       }
 
-      AppButton {
-        text: "I already rated this app"
-        flat: true
-        anchors.horizontalCenter: parent.horizontalCenter
-        textSize: sp(12)
-        onClicked: {
-          logic.setFeedBackSent(true)
+//      AppButton {
+//        text: "I already rated this app"
+//        flat: true
+//        anchors.horizontalCenter: parent.horizontalCenter
+//        textSize: sp(12)
+//        onClicked: {
+//          logic.setFeedBackSent(true)
 
-          // close the window
-          ratingDialog.close()
-        }
-      }
+//          // close the window
+//          ratingDialog.close()
+//        }
+//      }
 
-      // spacer
-      Item {
-        width: parent.width
-        height: parent.spacing
+//      // spacer
+//      Item {
+//        width: parent.width
+//        height: parent.spacing
+//      }
+    }
+
+    Timer {
+      id: openUrlTimeout
+      interval: 500
+      onTriggered: {
+        nativeUtils.openUrl(ratingUrl)
       }
     }
 

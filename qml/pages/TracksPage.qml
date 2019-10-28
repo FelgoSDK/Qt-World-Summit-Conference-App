@@ -13,7 +13,7 @@ ListPage {
     id: listModel
     source: viewHelper.prepareTracks(tracksModel)
     keyField: "title"
-    fields: ["title", "talks"]
+    fields: ["title", "talks", "color"]
   }
 
   delegate: TrackRow {

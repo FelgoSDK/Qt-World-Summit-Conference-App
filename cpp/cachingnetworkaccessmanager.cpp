@@ -5,18 +5,8 @@
 #include <QNetworkCacheMetaData>
 
 CachingNetworkAccessManager::CachingNetworkAccessManager(QObject *parent) : QNetworkAccessManager(parent) {
-  mUrlIgnoreList.append("https://www.qtworldsummit.com/api/schedule/all/");
-  mUrlIgnoreList.append("https://www.qtworldsummit.com/api/speakers/all/");
-  mUrlIgnoreList.append("https://www.qtworldsummit.com/api/version/show/");
-  mUrlIgnoreList.append("https://felgo.com/qml-sources/qtws2017/QtWSVersionCheck-test.qml");
-  mUrlIgnoreList.append("https://felgo.com/qml-sources/qtws2017/QtWSVersionCheck.qml");
-  mUrlIgnoreList.append("https://felgo.com/qml-sources/qmldir");
-
-  mUrlIgnoreList.append("https://www.qtworldsummit.com/api/schedule/all/");
-  mUrlIgnoreList.append("https://www.qtworldsummit.com/api/speakers/all/");
-  mUrlIgnoreList.append("https://www.qtworldsummit.com/api/version/show/");
-  mUrlIgnoreList.append("https://felgo.com/qml-sources/qtws2017/QtWSVersionCheck-test.qml");
-  mUrlIgnoreList.append("https://felgo.com/qml-sources/qtws2017/QtWSVersionCheck.qml");
+  mUrlIgnoreList.append("https://felgo.com/qml-sources/qtws2019/QtWSVersionCheck-test.qml");
+  mUrlIgnoreList.append("https://felgo.com/qml-sources/qtws2019/QtWSVersionCheck.qml");
   mUrlIgnoreList.append("https://felgo.com/qml-sources/qmldir");
 }
 

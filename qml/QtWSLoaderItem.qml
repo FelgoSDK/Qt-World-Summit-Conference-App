@@ -28,8 +28,8 @@ Rectangle {
     anchors.fill: parent
     visible: false
     asynchronous: true
-    property string updateCheckUrl: system.publishBuild ? "https://felgo.com/qml-sources/qtws2017/QtWSVersionCheck.qml" : "https://felgo.com/qml-sources/qtws2017/QtWSVersionCheck-test.qml"
-    source: !system.desktopPlatform ? updateCheckUrl : ""
+    property string updateCheckUrl: "https://felgo.com/qml-sources/qtws2019/QtWSVersionCheck.qml" //system.publishBuild ? "https://felgo.com/qml-sources/qtws2019/QtWSVersionCheck.qml" : ""
+    source: updateCheckUrl//!system.desktopPlatform ? updateCheckUrl : ""
     onLoaded: versionChecker.visible = true // show result on successful load
     z: 1
   }
@@ -72,7 +72,7 @@ Rectangle {
   Facebook {
     id: facebook
     appId: AppSettings.facebookAppId
-    readPermissions: [ "public_profile", "email", "user_friends" ]
+    readPermissions: [ "public_profile", "email"]
   }
 
   // amplitude
@@ -96,11 +96,13 @@ Rectangle {
     defaultPerPageCount: 100 // increase to show more users in leaderboard, default would be 30
 
     // this saves the get_user_scores request at app startup if the user already logged in before. it can be synced manually in the profile view
-    autoLoadUserScoresAndAchievemenstWhenAuthenticated: false
+    // autoLoadUserScoresAndAchievemenstWhenAuthenticated: false // property no longer exists
+    userInitiallyInSync: false
 
     //clearAllUserDataAtStartup: system.desktopPlatform // this can be enabled during development to simulate a first-time app start
     clearOfflineSendingQueueAtStartup: true // clear any stored requests in the offline queue at app start, to avoid starting errors
-    user.deviceId: system.UDID
+    //user.deviceId: system.UDID // property no longer exists
+
 
     // update highscore with changes after scores are in sync initially
     property int addScoreWhenSynced: 0
@@ -119,7 +121,9 @@ Rectangle {
     }
 
     // reset / initialize data model when when GameNetwork user switches
-    onUserInitiallyInSyncChanged: logic.resetOrInitializeDataModel(userInitiallyInSync)
+    onUserInitiallyInSyncChanged: {
+      logic.resetOrInitializeDataModel(gameNetwork.userInitiallyInSync)
+    }
   }
 
   // multiplayer
@@ -179,16 +183,24 @@ Rectangle {
     z: 2
 
     // Qt image
+//    AppImage {
+//      id: loadImage
+//      fillMode: AppImage.PreserveAspectCrop
+//      anchors.fill: parent
+//      source: "../assets/loader.png"
+//    }
+
     AppImage {
-      id: loadImage
-      fillMode: AppImage.PreserveAspectCrop
-      anchors.fill: parent
-      source: "../assets/loader.png"
+      id: img
+      source: "../assets/QtWS2019_globe_black.png"
+      width: dp(150)
+      fillMode: Image.PreserveAspectFit
+      anchors.centerIn: parent
     }
 
     Column {
       anchors.centerIn: parent
-      anchors.verticalCenterOffset: -dp(15)
+      anchors.verticalCenterOffset: img.height
       spacing: dp(15)
 
       // Spinner
@@ -233,6 +245,43 @@ Rectangle {
         duration: 300
       }
     }
+
+    Column {
+      width: parent.width
+      spacing: dp(10)
+      anchors.bottom: parent.bottom
+      anchors.bottomMargin: dp(15)
+
+      AppText {
+        text: "This conference app is powered by"
+        anchors.horizontalCenter: parent.horizontalCenter
+        font.pixelSize: sp(11)
+      }
+
+      Row {
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: dp(5)
+
+        AppImage {
+          source: "../assets/Qt_logo.png"
+          height: dp(30)
+          fillMode: Image.PreserveAspectFit
+          anchors.verticalCenter: parent.verticalCenter
+        }
+
+        AppText {
+          text: "+"
+          anchors.verticalCenter: parent.verticalCenter
+        }
+
+        AppImage {
+          source: "../assets/felgo_black.png"
+          height: dp(30)
+          fillMode: Image.PreserveAspectFit
+          anchors.verticalCenter: parent.verticalCenter
+        }
+      }
+    }
   }
 
   Connections {
@@ -273,12 +322,19 @@ Rectangle {
   }
 
   // getTrackColor - determines track color
-  function getTrackColor(track) {
-    if(!dataModel.tracks || dataModel.tracks[track] === undefined)
+  function getTrackColor(fetchedColor) {
+    var targetColor = fetchedColor
+    if(targetColor === undefined)
       return Theme.secondaryTextColor
 
+    // to get variable with color type
+    targetColor = Qt.tint(targetColor, "transparent")
+    if(!targetColor) {
+        return Theme.secondaryTextColor
+    }
+
     var light = 0.45 + 0.25 * (0.5 - trackColorBindingFix.baseTrackLightness)
-    return Qt.hsla(dataModel.tracks[track], 1, light, 1)
+    return Qt.hsla(targetColor.hslHue, 1, light, 1)
   }
 
   // color to HSL conversion

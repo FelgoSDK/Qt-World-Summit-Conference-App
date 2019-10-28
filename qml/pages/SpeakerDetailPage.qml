@@ -1,5 +1,5 @@
 import Felgo 3.0
-import QtQuick 2.0
+import QtQuick 2.9
 import "../common"
 
 FlickablePage {
@@ -60,7 +60,30 @@ FlickablePage {
 
     Item {
       width: parent.width
-      height: dp(Theme.navigationBar.defaultBarItemPadding) / 2
+      height: dp(Theme.navigationBar.defaultBarItemPadding)
+    }
+
+    AppText {
+      width: parent.width - dp(Theme.navigationBar.defaultBarItemPadding) * 2
+      anchors.horizontalCenter: parent.horizontalCenter
+      text: dataModel.speakers && dataModel.speakers[speakerID] ? dataModel.speakers[speakerID].title : ""
+      wrapMode: AppText.WordWrap
+      color: Theme.secondaryTextColor
+      leftPadding: dp(20)
+
+      Icon {
+        icon: IconType.building
+        color: Theme.secondaryTextColor
+        anchors.verticalCenter: parent.verticalCenter
+        opacity: 0.5
+        size: dp(12)
+      }
+    }
+
+
+    Item {
+      width: parent.width
+      height: dp(Theme.navigationBar.defaultBarItemPadding)
     }
 
     AppText {

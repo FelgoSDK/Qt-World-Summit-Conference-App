@@ -5,7 +5,7 @@ import QtQuick.Controls 2.0 as QtQuick2
 
 Page {
   id: page
-  title: "Timetable"
+  title: "Agenda"
   rightBarItem: ActivityIndicatorBarItem { opacity: dataModel.loading || currentContentLoading ? 1 : 0 }
 
   readonly property var daysModel: dataModel.schedule ? prepareDaysModel(dataModel.schedule) : []

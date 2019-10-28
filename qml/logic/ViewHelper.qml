@@ -16,12 +16,17 @@ Item {
         var talkID = Object.keys(dataModel.talks)[j]
         var talk = dataModel.talks[parseInt(talkID)]
 
-        if(talk !== undefined && talk.tracks.indexOf(track) > -1) {
-          talks.push(talk)
+        if(talk !== undefined/* && talk.tracks.indexOf(track) > -1*/) {
+          for(var idt in talk.tracks) {
+            if(talk.tracks[idt].name == track) {
+              talks.push(talk)
+            }
+          }
         }
       }
+      var color = tracks[Object.keys(tracks)[i]]
       talks = prepareTrackTalks(talks)
-      model.push({"title" : track, "talks" : talks})
+      model.push({"title" : track, "talks" : talks, "color" : color})
     }
     model.sort(compareTitle)
 

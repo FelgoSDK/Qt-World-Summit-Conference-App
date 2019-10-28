@@ -62,7 +62,7 @@ Item {
         id: trackIndicator
         width: parent.width
         height: ((parent.height - (trackCol.spacing * (repeater.count - 1))) / repeater.count)
-        color: loaderItem.getTrackColor(modelData)
+        color: modelData.color//loaderItem.getTrackColor(modelData.color)
       }
     }
   }
@@ -108,6 +108,8 @@ Item {
 
         property var speakerId: item.persons && item.persons.length > 0 ? item.persons[0]["id"] : undefined
         source: speakerId !== undefined && dataModel.speakers && dataModel.speakers[speakerId] ? dataModel.speakers[speakerId].avatar : ""
+
+
       } // SpeakerImage
 
       // title text
@@ -204,8 +206,26 @@ Item {
           text: item.start+" - "+item.end
 
           x: textLabel.x
-          width: parent.width - x
+          //width: parent.width - x
           anchors.verticalCenter: parent.verticalCenter
+        }
+
+
+
+        // room
+        AppText {
+          id: companyTxt
+          anchors.left: detailTextLabel.right
+          leftPadding: dp(10)
+          property var speakerId: item.persons && item.persons.length > 0 ? item.persons[0]["id"] : undefined
+          text: speakerId !== undefined && dataModel.speakers && dataModel.speakers[speakerId] ? dataModel.speakers[speakerId].title : ""
+          font.pixelSize: sp(scheduleListItem.style.fontSizeDetailText)
+          wrapMode: Text.NoWrap
+          maximumLineCount: 1
+          elide: Text.ElideRight
+          color: scheduleListItem.style.detailTextColor
+          width: parent.width - detailTextLabel.width - detailTextLabel.x - dp(15) - leftPadding
+//          anchors.verticalCenter: parent.verticalCenter
         }
       }
 
@@ -215,7 +235,7 @@ Item {
         Layout.minimumWidth: implicitWidth
         Layout.preferredHeight: implicitHeight
         Layout.columnSpan: 2
-        text: item.room && item.room !== "Qt World Summit 2017" ? item.room : ""
+        text: item.room && item.room !== "Qt World Summit 2019" ? item.room : ""
         font.pixelSize: sp(scheduleListItem.style.fontSizeDetailText)
         font.italic: true
         wrapMode: Text.NoWrap

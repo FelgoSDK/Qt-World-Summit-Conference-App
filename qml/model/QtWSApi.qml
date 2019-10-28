@@ -4,15 +4,17 @@ import QtQuick 2.0
 QtObject {
   id: _
 
-  // qtws 2017 api urls
-  property string qtwsApiScheduleUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/api/schedule/all/")
-  property string qtwsApiSpeakersUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/api/speakers/all/")
-  property string qtwsApiVersionUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/api/version/show/")
+  // qtws 2019 api urls
+  property string location: "Berlin"
+
+  property string qtwsApiScheduleUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/2019/api/schedule/all/?location=" + _.location)
+  readonly property string qtwsApiSpeakersUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/2019/api/speakers/all/")
+  readonly property string qtwsApiVersionUrl: Qt.resolvedUrl("https://www.qtworldsummit.com/2019/api/version/show/")
 
   // fallback urls of locally stored version in assets
-  property string fallbackScheduleUrl: Qt.resolvedUrl("../../assets/data/schedule.json")
-  property string fallbackSpeakersUrl: Qt.resolvedUrl("../../assets/data/speakers.json")
-  property string fallbackVersionUrl: Qt.resolvedUrl("../../assets/data/version.json")
+  readonly property string fallbackScheduleUrl: Qt.resolvedUrl("../../assets/data/schedule.json")
+  readonly property string fallbackSpeakersUrl: Qt.resolvedUrl("../../assets/data/speakers.json")
+  readonly property string fallbackVersionUrl: Qt.resolvedUrl("../../assets/data/version.json")
 
   Component.onCompleted: {
     HttpNetworkActivityIndicator.activationDelay = 0
@@ -113,8 +115,9 @@ QtObject {
 
           // build tracks model
           if(event["tracks"] !== undefined && Array.isArray(event["tracks"])) {
-            for(var idx in event["tracks"])
-              tracks[event["tracks"][idx]] = 0
+            for(var idx in event["tracks"]) {
+              tracks[event["tracks"][idx].name] = event["tracks"][idx].color
+            }
           }
 
           // clean up incorrect room entries of API version 1.953
@@ -130,12 +133,12 @@ QtObject {
     }
 
     //  define track colors
-    var hueDiff = 1 / Object.keys(tracks).length
-    var i = 0
-    for(var track in tracks) {
-      tracks[track] = i * hueDiff
-      i++
-    }
+//    var hueDiff = 1 / Object.keys(tracks).length
+//    var i = 0
+//    for(var track in tracks) {
+//      tracks[track] = i * hueDiff
+//      i++
+//    }
 
     // store data
     dataModel.talks = talks

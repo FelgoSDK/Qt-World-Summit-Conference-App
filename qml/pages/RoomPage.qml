@@ -46,8 +46,9 @@ FlickablePage {
       AppImage {
         width: parent.width
         fillMode: AppImage.PreserveAspectFit
-        property string fileName: room !== "Agenda" ? room.replace(" Room","") + ".png" : "Agenda.jpg"
+        property string fileName: room !== "Agenda" ? "Room " + room + ".png" : "Agenda.jpg"
         source: "../../assets/rooms/" + fileName
+
         MouseArea {
           anchors.fill: parent
           onDoubleClicked: {

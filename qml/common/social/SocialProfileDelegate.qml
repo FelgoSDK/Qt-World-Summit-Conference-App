@@ -25,6 +25,21 @@ SocialUserDelegate {
     gameNetworkItem.updateUserCustomData(JSON.stringify(newUserData))
   }
 
+  property string dialogStatus: "none"
+  property var dialogValues
+
+  Connections {
+    target: nativeUtils
+    onAlertSheetFinished: {
+      if(dialogStatus == "none" || !dialogValues || index == -1) return
+      if(dialogStatus == "jobFunction" || dialogStatus == "qtInterest" || dialogStatus == "qtExperience") {
+        updateCustomDataField(dialogStatus, dialogValues[index])
+      }
+      dialogStatus = "none"
+      dialogValues = undefined
+    }
+  }
+
   // Column for Local User
   Column {
     id: localUserCol
@@ -106,6 +121,7 @@ SocialUserDelegate {
           }
           nativeUtils.alertSheetFinished(testIndex)
         } else {
+          dialogValues = ["Developer", "Manager", "Product Manager", "Designer", "Other"]
           nativeUtils.displayAlertSheet("", ["Developer", "Manager", "Product Manager", "Designer", "Other"], true)
         }
       }
@@ -142,6 +158,7 @@ SocialUserDelegate {
           }
           nativeUtils.alertSheetFinished(testIndex)
         } else {
+          dialogValues = ["Desktop", "Mobile", "Automotive", "Automation", "Embedded", "Other"]
           nativeUtils.displayAlertSheet("What is Your Main Qt Interest?", ["Desktop", "Mobile", "Automotive", "Automation", "Embedded", "Other"], true)
         }
       }
@@ -178,6 +195,7 @@ SocialUserDelegate {
           }
           nativeUtils.alertSheetFinished(testIndex)
         } else {
+          dialogValues = ["Less than 1 year", "1-3 years", "More than 3 years"]
           // 3 levels: <1y Qt Newcomer, 1-3yrs Qt Intermediate, 3+yrs Qt Veteran
           nativeUtils.displayAlertSheet("How long did you use Qt?", ["Less than 1 year", "1-3 years", "More than 3 years"], true)
         }

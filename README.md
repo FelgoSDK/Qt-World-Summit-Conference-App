@@ -1,17 +1,17 @@
 ![ScreenShot](https://felgo.com/support/felgo-logo.png)
 
-# QtWorldSummit2017
-The official Qt World Summit 2017 conference app by Felgo
+# QtWorldSummit2019
+The official Qt World Summit 2019 conference app by Felgo
 
 Description
 -----------
-This is the source code of the official Qt World Summit 2017 conference app made with Felgo, which is available for free in all stores.
+This is the source code of the official Qt World Summit 2019 conference app made with Felgo, which is available for free in all stores.
 
 For more information about creating Apps with Felgo, see here: https://felgo.com/apps/.
 
 Download and try the demo:
- - Android: https://play.google.com/store/apps/details?id=net.vplay.demos.qtws2017
- - iOS: https://itunes.apple.com/us/app/qt-world-summit-2017-official/id1286758361?l=en&mt=8
+ - Android: https://play.google.com/store/apps/details?id=net.vplay.demos.qtws2019
+ - iOS: https://apps.apple.com/us/app/id1484310915
 
 Installation Instructions
 -------------------------
@@ -36,7 +36,7 @@ Felgo Team
 
 Credits
 -------
-V-Play GmbH
+FELGO GmbH
 
 Contact us
 ----------
@@ -51,9 +51,6 @@ The app sourcecode is released under the MIT license.
 
 Permission is NOT granted to merge, publish, distribute, sublicense and/or
 sell the provided image, audio and video files of this software.
-
-This app uses QZXing, see the license here:
-https://github.com/ftylitak/qzxing/blob/master/LICENSE
 
 If You have any questions about those Agreements, please write to support@felgo.com
 or visit https://felgo.com/.

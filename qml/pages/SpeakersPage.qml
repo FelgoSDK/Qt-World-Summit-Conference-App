@@ -45,9 +45,14 @@ ListPage {
     for(var i in Object.keys(speakers)){
       var speakerID = Object.keys(speakers)[i];
       var speaker = speakers[parseInt(speakerID)]
+      if(!speaker["last_name"]) {
+        speaker["last_name"] = speaker["first_name"].charAt(0).toUpperCase() + speaker["first_name"].slice(1)
+        speaker["first_name"] = undefined
+      }
       speaker["firstLetter"] = speaker["last_name"].charAt(0).toUpperCase()
+
       console.log("\nSPEAKERS: "+JSON.stringify(speaker))
-      model.push(speaker)
+      if(speaker.talks.length > 0) model.push(speaker)
     }
     model.sort(compareLastName);
     return model

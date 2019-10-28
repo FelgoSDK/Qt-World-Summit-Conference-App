@@ -102,7 +102,7 @@ Rectangle {
               id: trackIcon
               anchors.verticalCenter: parent.verticalCenter
               icon: IconType.tag
-              color: loaderItem.getTrackColor(modelData)
+              color: modelData.color//loaderItem.getTrackColor(modelData.color)
             }
 
             AppText {
@@ -110,8 +110,8 @@ Rectangle {
               anchors.verticalCenter: parent.verticalCenter
               width: parent.width - trackIcon.width - _.colSpacing
               wrapMode: Text.WordWrap
-              text: modelData
-              color: trackIcon.color
+              text: modelData.name
+              color: _.iconColor
 
               RippleMouseArea {
                 height: parent.height * 2
@@ -364,7 +364,7 @@ Rectangle {
             anchors.centerIn: parent
             onClicked: {
               amplitude.logEvent("Share Talk", {"title" : talk.title, "talkId" : talk.id})
-              nativeUtils.share("I am attending \"" + talk.title + "\" at Qt World Summit 2017!","http://www.qtworldsummit.com/sessions/"+talk.slug)
+              nativeUtils.share("I am attending \"" + talk.title + "\" at Qt World Summit 2019!","http://www.qtworldsummit.com/sessions/"+talk.slug)
             }
           }
         }

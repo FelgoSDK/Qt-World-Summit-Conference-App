@@ -1,8 +1,8 @@
 {
-  "title": "QtWS 2017",
-  "identifier": "net.vplay.demos.qtws2017",
+  "title": "QtWS 2019",
+  "identifier": "net.vplay.demos.qtws2019",
   "orientation": "auto",
-  "versioncode": 26,
-  "versionname": "1.3",
-  "stage": "test"
+  "versioncode": 19,
+  "versionname": "1.1",
+  "stage": "publish"
 }

@@ -154,7 +154,7 @@ Item {
 
     // action 9 - loadContact - loads contact from Eventbrite
     onLoadContact: {
-      api.sendGetRequest(Qt.resolvedUrl("https://www.qtworldsummit.com/api/attendee/show/?id="+id), successHandler, errorHandler)
+      api.sendGetRequest(Qt.resolvedUrl("https://www.qtworldsummit.com/2019/api/attendee/show/?id="+id), successHandler, errorHandler)
     }
 
     // action 10 - addContact - store contact from barcode scanner

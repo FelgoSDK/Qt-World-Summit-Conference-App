@@ -1,22 +1,16 @@
 # allows to add DEPLOYMENTFOLDERS and links to the Felgo library and QtCreator auto-completion
 CONFIG += felgo
 
-CONFIG += qzxing_multimedia # multimedia + QML features for QZXing
-
-# Project identifier and version
-# More information: https://felgo.com/doc/felgo-publishing/#project-configuration
-PRODUCT_IDENTIFIER = net.vplay.demos.qtws2017
-PRODUCT_VERSION_NAME = 1.3
-PRODUCT_VERSION_CODE = 26
+# configure the bundle identifier for iOS
+PRODUCT_IDENTIFIER = net.vplay.demos.qtws2019
+PRODUCT_VERSION_NAME = 1.1
+PRODUCT_VERSION_CODE = 19
 
 # Optionally set a license key that is used instead of the license key from
 # main.qml file (App::licenseKey for your app or GameWindow::licenseKey for your game)
 # Only used for local builds and Felgo Cloud Builds (https://felgo.com/cloud-builds)
 # Not used if using Felgo Live
 PRODUCT_LICENSE_KEY = ""
-
-# add QZXing framework for barcode scanning
-include(QZXing/QZXing.pri)
 
 qmlFolder.source = qml
 DEPLOYMENTFOLDERS += qmlFolder # comment for publishing
@@ -58,8 +52,8 @@ android {
       android/build.gradle
 }
 
-# Uncomment for using iOS plugin libraries
-# FELGO_PLUGINS += onesignal facebook amplitude
+FELGO_PLUGINS += onesignal facebook amplitude
+
 ios {
     QMAKE_INFO_PLIST = ios/Project-Info.plist
     OTHER_FILES += $$QMAKE_INFO_PLIST

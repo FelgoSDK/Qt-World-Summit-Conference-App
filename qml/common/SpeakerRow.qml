@@ -37,11 +37,33 @@ Rectangle {
     Column {
       width: parent.width - avatar.width - row.spacing
       anchors.verticalCenter: parent.verticalCenter
+      spacing: dp(2)
 
       AppText {
-        text: speaker === undefined ? "" : speaker.first_name + " " + speaker.last_name
+        text: speaker === undefined ? "" : speaker.first_name ? speaker.first_name + " " + "<strong>"+speaker.last_name+"</strong>" : "<strong>"+speaker.last_name+"</strong>"
         width: parent.width
       }
+
+      AppText {
+        width: small? parent.width - dp(Theme.navigationBar.defaultBarItemPadding) : parent.width
+        elide: AppText.ElideRight
+        maximumLineCount: 1
+        text: speaker ? speaker.title : ""
+        color: Theme.secondaryTextColor
+        font.pixelSize: sp(12)
+//        leftPadding: dp(15)
+        visible: speaker && speaker.title
+        opacity: 0.65
+
+//        Icon {
+//          icon: IconType.building
+//          color: Theme.secondaryTextColor
+//          anchors.verticalCenter: parent.verticalCenter
+//          opacity: 0.5
+//          size: dp(10)
+//        }
+      }
+
       Repeater {
         id: talksRepeater
         model: speaker && speaker.talks || []
